@@ -27,12 +27,7 @@ const ctx = canvas.getContext("2d");
 const W = canvas.width,
   H = canvas.height;
 
-const processEl = document.getElementById("process");
-const processDot = document.querySelector(".process .dot");
-const processText = document.getElementById("processText");
-const hintText = document.getElementById("hintText");
 const repaintBtn = document.getElementById("repaint");
-const paletteEl = document.getElementById("palette");
 
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -83,7 +78,7 @@ const DS = 4;
 /* region ids */
 const R = { BG: 0, LIGHTS: 1, GREEN: 2, POOL: 3, STONE: 4, SHIRT: 5, SKIN: 6, HAIR: 7 };
 const R_NAMES = ["bg", "lights", "green", "pool", "stone", "shirt", "skin", "hair"];
-let regionMap, regionCells, regionColor, figMask;
+let regionMap, regionCells, figMask;
 
 function makeSketch() {
   const c = colorL.getContext("2d");
@@ -183,7 +178,6 @@ function makeSketch() {
   /* --- semantic regions: figure/background FIRST, then color within --- */
   regionMap = new Uint8Array(EW * EH);
   regionCells = R_NAMES.map(() => []);
-  const sums = R_NAMES.map(() => [0, 0, 0, 0]);
 
   for (let ey = 0; ey < EH; ey++)
     for (let ex = 0; ex < EW; ex++) {
@@ -197,13 +191,7 @@ function makeSketch() {
       const i = ey * EW + ex;
       regionMap[i] = id;
       regionCells[id].push({ x: px, y: py });
-      const s = sums[id];
-      s[0] += r;
-      s[1] += gg;
-      s[2] += b;
-      s[3]++;
     }
-  regionColor = sums.map((s) => (s[3] ? [(s[0] / s[3]) | 0, (s[1] / s[3]) | 0, (s[2] / s[3]) | 0] : [180, 170, 150]));
 }
 
 function classify(r, g, b, x, y, fig) {
@@ -268,8 +256,7 @@ function boxBlur(a, w, h, r) {
    PLANNING — everything happens in a human order
    ===================================================================== */
 let sketchGroups = []; // [{strokes, t0, t1}]
-let washGroups = []; // [{stamps,  t0, t1, caption, phase, color}]
-let captionList = [];
+let washGroups = []; // [{stamps, t0, t1, clip}]
 let TOTAL = 0;
 
 const isSubject = (id) => id === R.SKIN || id === R.HAIR || id === R.SHIRT;
@@ -329,15 +316,7 @@ function planAll() {
     { strokes: shadeFig, t0: 9.0, t1: 11.2 },
     { strokes: shadeBg, t0: 11.0, t1: 13.0 },
   ];
-
-  captionList = [
-    [0.0, "sketch", "graphite — the head first: eyes, nose, the smile…", "#8a8178"],
-    [3.6, "sketch", "shoulders, then the hoodie…", "#8a8178"],
-    [6.0, "sketch", "placing the background — pool edge, the lights…", "#8a8178"],
-    [9.0, "sketch", "hatching the figure…", "#8a8178"],
-    [11.0, "sketch", "shading the scene…", "#8a8178"],
-    [13.0, "sketch", "stepping back to check the drawing…", "#8a8178"],
-  ];
+  /* 13.0–15.0: the artist steps back to check the drawing */
 
   /* ---------- ACT II: watercolor — ~20 focused passes ----------
      Each region is split into spatial sub-areas (k-means). The brush
@@ -347,36 +326,35 @@ function planAll() {
      second, smaller pass refines the same ground. ---------------- */
   const PAUSE_END = 15.0;
   const sequence = [
-    // region id, seconds, caption, phase, [big, small] stamp radii
+    // region id, seconds, what the brush is doing, [big, small] stamp radii
     // — the figure first: face, then hair, then its details, then the hoodie —
-    [R.SKIN, 3.6, "warm sienna — the face first…", "color", [70, 36]],
-    [R.HAIR, 2.8, "dark umber — hair and beard…", "color", [55, 30]],
-    ["detail", 3.4, null, "detail", null],
-    [R.SHIRT, 3.8, "pale cream — the hoodie, wet and loose…", "color", [110, 55]],
-    ["rinse", 0.9, "rinsing the brush — now the world around…", "wash", null],
+    [R.SKIN, 3.6, "warm sienna — the face first", [70, 36]],
+    [R.HAIR, 2.8, "dark umber — hair and beard", [55, 30]],
+    ["detail", 3.4, "the finest brush — eyes, then the smile", null],
+    [R.SHIRT, 3.8, "pale cream — the hoodie, wet and loose", [110, 55]],
+    ["rinse", 0.9, "rinsing the brush — now the world around", null],
     // — then the scene fills in behind the finished figure —
-    [R.LIGHTS, 3.2, "pale gold — the string lights…", "wash", [120, 60]],
-    [R.GREEN, 3.6, "sap green — the garden behind…", "wash", [110, 55]],
-    [R.BG, 2.6, "soft washes for the far lights…", "wash", [130, 65]],
-    [R.STONE, 2.4, "a warm gray — the stone edge…", "wash", [95, 50]],
-    [R.POOL, 3.8, "a wide flat brush of teal — the pool…", "wash", [140, 70]],
+    [R.LIGHTS, 3.2, "pale gold — the string lights", [120, 60]],
+    [R.GREEN, 3.6, "sap green — the garden behind", [110, 55]],
+    [R.BG, 2.6, "soft washes for the far lights", [130, 65]],
+    [R.STONE, 2.4, "a warm gray — the stone edge", [95, 50]],
+    [R.POOL, 3.8, "a wide flat brush of teal — the pool", [140, 70]],
   ];
 
   washGroups = [];
   let t = PAUSE_END;
 
-  for (const [id, dur, caption, phase, radii] of sequence) {
+  for (const [id, dur, , radii] of sequence) {
     if (id === "rinse") {
-      captionList.push([t + 0.3, phase, caption, "#9db3ae"]);
-      t += dur;
+      t += dur; // a beat of stillness while the brush rinses
       continue;
     }
 
     if (id === "detail") {
       // two deliberate passes: the eyes, then the smile
       const spots = [
-        { x: CX, y: CY - H * 0.035, sx: W * 0.16, sy: H * 0.055, cap: "the finest brush — the eyes…" },
-        { x: CX, y: CY + H * 0.1, sx: W * 0.11, sy: H * 0.05, cap: "…and the smile." },
+        { x: CX, y: CY - H * 0.035, sx: W * 0.16, sy: H * 0.055 },
+        { x: CX, y: CY + H * 0.1, sx: W * 0.11, sy: H * 0.05 },
       ];
       for (const sp of spots) {
         const t0 = t + 0.15,
@@ -394,7 +372,6 @@ function planAll() {
           });
         stamps = pathOrder(stamps);
         washGroups.push({ stamps, t0, t1, clip: "fig" });
-        captionList.push([t0, "detail", sp.cap, "#5a4636"]);
       }
       continue;
     }
@@ -415,10 +392,7 @@ function planAll() {
       return ca.y + ca.x * 0.35 - (cb.y + cb.x * 0.35);
     });
 
-    const rc = regionColor[id];
-    const color = `rgb(${rc[0]},${rc[1]},${rc[2]})`;
     const totalSize = clusters.reduce((s, c) => s + c.length, 0);
-    let first = true;
 
     for (const cl of clusters) {
       const share = cl.length / totalSize;
@@ -455,17 +429,12 @@ function planAll() {
       // wet pass walks the area first, refine pass retraces the same ground
       const stamps = pathOrder(big).concat(pathOrder(small));
       washGroups.push({ stamps, t0, t1, clip: isSubject(id) ? "fig" : "bg" });
-      if (first) {
-        captionList.push([t0, phase, caption, color]);
-        first = false;
-      }
     }
   }
 
   const DRY0 = t + 0.4,
     DRY1 = DRY0 + 2.4;
   washGroups.dry = [DRY0, DRY1];
-  captionList.push([DRY0, "done", "signed & drying.", "#3b2f28"]);
   TOTAL = DRY1;
 }
 
@@ -662,7 +631,6 @@ function frame(ts) {
   }
 
   compose(pd);
-  updateCaption(t);
 
   if (t < TOTAL + 0.2) rafId = requestAnimationFrame(frame);
   else finish();
@@ -708,16 +676,6 @@ function compose(dry) {
   ctx.drawImage(compC, 0, 0);
 }
 
-function updateCaption(t) {
-  let cur = captionList[0];
-  for (const c of captionList) if (t >= c[0]) cur = c;
-  if (processText.textContent !== cur[2]) {
-    processText.textContent = cur[2];
-    processEl.dataset.phase = cur[1];
-    processDot.style.background = cur[3]; // the dot IS the mixed pigment
-  }
-}
-
 /* ---------- lifecycle ---------- */
 function resetRun() {
   cS.clearRect(0, 0, W, H);
@@ -733,7 +691,6 @@ function paint() {
   doneS = sketchGroups.map(() => 0);
   doneW = washGroups.map(() => 0);
   repaintBtn.disabled = true;
-  hintText.textContent = "brush is moving…";
   start = null;
   if (rafId) cancelAnimationFrame(rafId);
   rafId = requestAnimationFrame(frame);
@@ -747,11 +704,7 @@ function finish() {
   cCB.fillStyle = "#fff";
   cCB.fillRect(0, 0, W, H);
   compose(1);
-  processText.textContent = "signed & drying.";
-  processEl.dataset.phase = "done";
-  processDot.style.background = "#3b2f28";
   repaintBtn.disabled = false;
-  hintText.textContent = "≈ " + Math.round(TOTAL) + " seconds of brushwork";
   document.body.classList.add("finished");
 }
 
@@ -762,37 +715,8 @@ function skipToEnd() {
   finish();
 }
 
-function buildPalette() {
-  const c = colorL.getContext("2d");
-  const spots = [
-    [500, 180],
-    [210, 760],
-    [520, 560],
-    [720, 420],
-    [840, 830],
-  ];
-  paletteEl.innerHTML = "";
-  for (const [x, y] of spots) {
-    const d = c.getImageData(x, y, 8, 8).data;
-    let r = 0,
-      g = 0,
-      b = 0,
-      n = 0;
-    for (let i = 0; i < d.length; i += 4) {
-      r += d[i];
-      g += d[i + 1];
-      b += d[i + 2];
-      n++;
-    }
-    const sw = document.createElement("span");
-    sw.style.background = `rgb(${(r / n) | 0},${(g / n) | 0},${(b / n) | 0})`;
-    paletteEl.appendChild(sw);
-  }
-}
-
 function init() {
   makeSketch();
-  buildPalette();
   if (reducedMotion) skipToEnd();
   else setTimeout(paint, 500);
 }

@@ -4,41 +4,17 @@ import Base from "../layouts/Base.astro";
 
 <Base>
   <main class="wrap">
-    <figure class="easel" aria-label="Watercolor self-portrait, painting itself in stages">
-      <div class="sheet">
-        <span class="tape tl"></span>
-        <span class="tape br"></span>
-        <canvas id="painting" width="1000" height="1000"></canvas>
-      </div>
-      <figcaption class="process" data-phase="sketch" id="process">
-        <span class="dot" aria-hidden="true"></span>
-        <em id="processText">taping down the paper…</em>
-      </figcaption>
+    <div class="easel" aria-label="Watercolor self-portrait, painting itself in stages">
+      <canvas id="painting" width="1000" height="1000"></canvas>
       <div class="actions">
         <button class="repaint" id="repaint" disabled>paint it again</button>
       </div>
-      <p class="hint" id="hintText">brush is moving…</p>
-      <div class="palette" id="palette" aria-hidden="true"></div>
-      <p class="palette-label">pigments pulled from the portrait</p>
-    </figure>
+    </div>
 
     <section class="intro">
-      <p class="eyebrow">The personal page of</p>
-
-      {/* ✏️ EDIT ME: your name and words below */}
       <h1>Philip <span class="wash">Weiss</span></h1>
 
-      <div class="bio">
-        <p class="opener">
-          I build software and tell stories. This is my corner of the web — a
-          place to put a face to the name and the work.
-        </p>
-        <p>
-          The portrait paints itself the way real watercolor does:
-          graphite first, then loose wet washes, then the details that make it
-          mine.
-        </p>
-      </div>
+      {/* bio text to come — the .bio styles in global.css are ready for it */}
 
       <ul class="links">
         <li>

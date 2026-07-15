@@ -60,90 +60,26 @@
 .wrap {
   min-height: 100svh;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  gap: clamp(2rem, 6vw, 6rem);
-  align-items: center;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: clamp(2rem, 6vh, 4.5rem) clamp(1.25rem, 5vw, 3rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
-/* ---------- left: the easel ---------- */
+/* ---------- left: the easel, a full-bleed pane in the painting's
+   own paper tone, so the portrait reads painted onto the page ---------- */
 
 .easel {
-  position: relative;
-  margin: 0;
-}
-
-/* the cotton sheet the portrait is painted on: warm, deckle-edged, taped down */
-.sheet {
-  position: relative;
   background: var(--sheet);
-  padding: 4.2%;
-  box-shadow:
-    0 1px 2px rgba(29, 27, 24, 0.1),
-    0 12px 40px -12px rgba(29, 27, 24, 0.3);
-  transform: rotate(-1.1deg);
-  border-radius: 6px;
-  clip-path: polygon(
-    0.6% 1.2%, 12% 0.2%, 27% 1%, 44% 0.3%, 61% 1.1%, 78% 0.2%, 93% 1%, 99.4% 0.6%,
-    99.2% 14%, 99.8% 31%, 99.1% 49%, 99.7% 66%, 99% 83%, 99.6% 98.8%,
-    86% 99.4%, 70% 98.9%, 53% 99.6%, 36% 99%, 19% 99.7%, 1% 99.2%,
-    0.4% 84%, 1% 67%, 0.2% 50%, 0.9% 33%, 0.3% 16%
-  );
-}
-
-.tape {
-  position: absolute;
-  width: 92px;
-  height: 30px;
-  background: rgba(222, 205, 168, 0.55);
-  box-shadow: 0 1px 3px rgba(29, 27, 24, 0.15);
-  backdrop-filter: blur(1px);
-  z-index: 3;
-}
-.tape.tl {
-  top: -12px;
-  left: 8%;
-  transform: rotate(-6deg);
-}
-.tape.br {
-  bottom: -12px;
-  right: 7%;
-  transform: rotate(5deg);
+  border-right: 1px solid var(--rule-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(2rem, 6vh, 4.5rem) clamp(1.5rem, 4vw, 4rem);
 }
 
 canvas#painting {
   display: block;
-  width: 100%;
+  width: min(100%, 34rem);
   aspect-ratio: 1 / 1;
-  border-radius: 2px;
-}
-
-/* the artist's process, captioned like a plate in a book: centered, italic */
-.process {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.7rem;
-  margin-top: 1.5rem;
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 0.95rem;
-  letter-spacing: 0.01em;
-  color: var(--faded);
-  min-height: 1.6em;
-}
-.process .dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50% 46% 52% 48%;
-  background: var(--faded);
-  transition: background 0.6s ease;
-  flex: none;
-}
-.process em {
-  font-style: inherit;
 }
 
 /* the repaint plate: the engraved-inscription button of the worldfall hero,
@@ -151,7 +87,7 @@ canvas#painting {
 .actions {
   display: flex;
   justify-content: center;
-  margin-top: 1.3rem;
+  margin-top: 2.2rem;
 }
 button.repaint {
   position: relative;
@@ -197,60 +133,14 @@ button.repaint:disabled {
   cursor: default;
 }
 
-/* the quiet line under the plate ("brush is moving…" → "≈ 74 seconds of brushwork") */
-.hint {
-  margin-top: 0.85rem;
-  text-align: center;
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 0.82rem;
-  color: var(--faded);
-  min-height: 1.4em;
-}
-
-/* pigments literally sampled from the finished portrait, filled in by JS */
-.palette {
-  display: flex;
-  justify-content: center;
-  gap: 0.55rem;
-  margin-top: 1.6rem;
-  opacity: 0;
-  transform: translateY(6px);
-  transition:
-    opacity 0.9s ease 0.3s,
-    transform 0.9s ease 0.3s;
-}
-body.finished .palette {
-  opacity: 1;
-  transform: none;
-}
-.palette span {
-  width: 26px;
-  height: 26px;
-  border-radius: 43% 57% 52% 48% / 55% 44% 56% 45%;
-  box-shadow:
-    inset 0 0 0 1px rgba(29, 27, 24, 0.12),
-    0 2px 5px rgba(29, 27, 24, 0.15);
-}
-.palette-label {
-  margin-top: 0.55rem;
-  text-align: center;
-  font-size: 0.62rem;
-  font-weight: 560;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--faded);
-  opacity: 0;
-  transition: opacity 0.9s ease 0.5s;
-}
-body.finished .palette-label {
-  opacity: 1;
-}
-
 /* ---------- right: the words ---------- */
 
 .intro {
-  max-width: 30rem;
+  align-self: center;
+  justify-self: center;
+  width: 100%;
+  max-width: 34rem;
+  padding: clamp(2rem, 6vh, 4.5rem) clamp(1.5rem, 5vw, 3.5rem);
 }
 
 /* a title-page eyebrow: tracked small caps in the rubric red */
@@ -384,17 +274,15 @@ body.finished h1 .wash::after {
 @media (max-width: 860px) {
   .wrap {
     grid-template-columns: 1fr;
-    gap: 2.6rem;
-    padding-top: 2.4rem;
   }
   .easel {
     order: 2;
-    max-width: 480px;
-    margin: 0 auto;
-    width: 100%;
+    border-right: none;
+    border-top: 1px solid var(--rule-soft);
   }
   .intro {
     order: 1;
+    padding-top: 3rem;
   }
   .bio {
     font-size: 1.14rem;
@@ -402,9 +290,7 @@ body.finished h1 .wash::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  h1 .wash::after,
-  .palette,
-  .palette-label {
+  h1 .wash::after {
     transition: none;
   }
 }
