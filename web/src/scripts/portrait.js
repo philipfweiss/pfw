@@ -28,8 +28,30 @@ const W = canvas.width,
   H = canvas.height;
 
 const repaintBtn = document.getElementById("repaint");
+const timelineEl = document.getElementById("timeline");
+const timelineFill = document.getElementById("timelineFill");
+const timelineDot = document.getElementById("timelineDot");
 
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---- the day's light: the painting (and its pane, via CSS [data-tod])
+   follow the visitor's hour. ?tod=morning|day|golden|night forces one. ---- */
+function todBucket() {
+  const forced = new URLSearchParams(location.search).get("tod");
+  if (["morning", "day", "golden", "night"].includes(forced)) return forced;
+  const h = new Date().getHours();
+  if (h >= 20 || h < 6) return "night";
+  if (h < 11) return "morning";
+  if (h >= 17) return "golden";
+  return "day";
+}
+const TOD = todBucket();
+document.documentElement.dataset.tod = TOD;
+const TOD_TINT = {
+  morning: { op: "screen", color: "rgba(255,252,243,0.10)" },
+  golden: { op: "multiply", color: "rgba(240,180,90,0.10)" },
+  night: { op: "multiply", color: "rgba(90,98,143,0.14)" },
+}[TOD];
 
 function layer() {
   const c = document.createElement("canvas");
@@ -583,6 +605,7 @@ let start = null,
   finished = false;
 let doneS = [],
   doneW = [];
+let tNow = 0; // seconds into the current painting
 
 function progress(t, a, b) {
   return Math.min(1, Math.max(0, (t - a) / (b - a)));
@@ -590,10 +613,10 @@ function progress(t, a, b) {
 const easeOut = (x) => 1 - Math.pow(1 - x, 3);
 const easeInOut = (x) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
 
-function frame(ts) {
-  if (!start) start = ts;
-  const t = (ts - start) / 1000;
-
+/* draw every stroke and stamp due by time t. Monotonic: assumes the done
+   counters already reflect some earlier time; renderAt() resets them to
+   replay from zero when the timeline is dragged backwards. */
+function advanceTo(t) {
   /* pencil groups */
   for (let gi = 0; gi < sketchGroups.length; gi++) {
     const g = sketchGroups[gi];
@@ -617,7 +640,10 @@ function frame(ts) {
       doneW[gi]++;
     }
   }
+}
 
+/* the per-frame drying pass: cumulative, the way wet paper actually dries */
+function dryFrame(t) {
   const [d0, d1] = washGroups.dry;
   const pd = progress(t, d0, d1);
   if (pd > 0) {
@@ -629,11 +655,46 @@ function frame(ts) {
       c.restore();
     }
   }
+  return pd;
+}
 
+function frame(ts) {
+  if (!start) start = ts;
+  const t = (ts - start) / 1000;
+  tNow = t;
+
+  advanceTo(t);
+  const pd = dryFrame(t);
   compose(pd);
+  updateTimeline(t);
+  updateFavicon(ts, false);
 
   if (t < TOTAL + 0.2) rafId = requestAnimationFrame(frame);
   else finish();
+}
+
+/* rebuild the canvas at an arbitrary moment (the scrub path) */
+function renderAt(t) {
+  cS.clearRect(0, 0, W, H);
+  cCF.clearRect(0, 0, W, H);
+  cCB.clearRect(0, 0, W, H);
+  doneS = sketchGroups.map(() => 0);
+  doneW = washGroups.map(() => 0);
+  advanceTo(t);
+  const [d0, d1] = washGroups.dry;
+  const pd = progress(t, d0, d1);
+  if (pd > 0) {
+    /* approximate the cumulative frame-by-frame drying in one pass */
+    for (const c of [cCF, cCB]) {
+      c.save();
+      c.globalAlpha = Math.min(1, pd * 1.4);
+      c.fillStyle = "#fff";
+      c.fillRect(0, 0, W, H);
+      c.restore();
+    }
+  }
+  compose(pd);
+  updateTimeline(t);
 }
 
 function compose(dry) {
@@ -674,6 +735,353 @@ function compose(dry) {
   cc.drawImage(scrA, 0, 0);
   cc.globalCompositeOperation = "source-over";
   ctx.drawImage(compC, 0, 0);
+
+  applyDaylight();
+}
+
+/* the hour's light, laid over painting and paper alike (the pane outside the
+   canvas gets the same shift via CSS [data-tod] so the sheet reads as one) */
+function applyDaylight() {
+  if (!TOD_TINT) return;
+  ctx.save();
+  ctx.globalCompositeOperation = TOD_TINT.op;
+  ctx.fillStyle = TOD_TINT.color;
+  ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+}
+
+/* =====================================================================
+   THE TIMELINE — a hairline under the sheet; drag it to move the brush
+   backwards and forwards through the painting's acts
+   ===================================================================== */
+
+function updateTimeline(t) {
+  if (!timelineEl || !TOTAL) return;
+  const pct = Math.min(100, (t / TOTAL) * 100);
+  timelineFill.style.width = pct + "%";
+  timelineDot.style.left = pct + "%";
+  timelineEl.setAttribute("aria-valuenow", String(Math.round(pct)));
+}
+
+function scrubTo(t) {
+  t = Math.max(0, Math.min(TOTAL, t));
+  tNow = t;
+  stopAmbient();
+  clearTouches();
+  if (finished) {
+    finished = false;
+    document.body.classList.remove("finished");
+  }
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+  renderAt(t);
+}
+
+function resumeFrom(t) {
+  if (t >= TOTAL - 0.05) {
+    finish();
+    return;
+  }
+  repaintBtn.disabled = true;
+  start = performance.now() - t * 1000;
+  rafId = requestAnimationFrame(frame);
+}
+
+if (timelineEl) {
+  let dragging = false;
+  let pendingT = null;
+  let scrubRaf = null;
+  const tFromEvent = (e) => {
+    const r = timelineEl.getBoundingClientRect();
+    return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * TOTAL;
+  };
+  /* coalesce drag events: one full replay per animation frame at most */
+  const scheduleScrub = (t) => {
+    pendingT = t;
+    if (scrubRaf == null)
+      scrubRaf = requestAnimationFrame(() => {
+        scrubRaf = null;
+        scrubTo(pendingT);
+      });
+  };
+  timelineEl.addEventListener("pointerdown", (e) => {
+    if (!TOTAL) return;
+    dragging = true;
+    timelineEl.setPointerCapture(e.pointerId);
+    scheduleScrub(tFromEvent(e));
+  });
+  timelineEl.addEventListener("pointermove", (e) => {
+    if (dragging) scheduleScrub(tFromEvent(e));
+  });
+  const endDrag = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    const t = tFromEvent(e);
+    scrubTo(t);
+    resumeFrom(t);
+  };
+  timelineEl.addEventListener("pointerup", endDrag);
+  timelineEl.addEventListener("pointercancel", endDrag);
+  timelineEl.addEventListener("keydown", (e) => {
+    if (!TOTAL || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+    e.preventDefault();
+    const t = Math.max(0, Math.min(TOTAL, tNow + (e.key === "ArrowRight" ? 2 : -2)));
+    scrubTo(t);
+    resumeFrom(t);
+  });
+}
+
+/* =====================================================================
+   AFTER THE PAINTING DRIES — the signature writes itself, the string
+   lights breathe, the pool keeps moving (barely), and the visitor may
+   touch the painting: a wet stroke in the local pigment that dries
+   back to the portrait a few seconds later.
+   ===================================================================== */
+
+let finalL = null; // the finished, daylit painting, baked once
+let ambientId = null;
+let twinkles = [];
+let ripples = [];
+let touches = [];
+let sigStart = null;
+let sigDone = false;
+
+const SIG = { text: "P. Weiss", x: 946, y: 950, size: 44, tilt: -0.05 };
+
+function bakeFinal() {
+  finalL = finalL || layer();
+  const f = finalL.getContext("2d");
+  f.clearRect(0, 0, W, H);
+  f.drawImage(canvas, 0, 0);
+}
+
+function drawSignature(c, p) {
+  c.save();
+  c.translate(SIG.x, SIG.y);
+  c.rotate(SIG.tilt);
+  c.font = `italic 500 ${SIG.size}px "EB Garamond Variable", Georgia, serif`;
+  c.textAlign = "right";
+  c.fillStyle = "rgba(59, 47, 40, 0.8)";
+  if (p < 1) {
+    /* reveal left-to-right, a nib crossing the paper */
+    const w = c.measureText(SIG.text).width;
+    c.beginPath();
+    c.rect(-w - 8, -SIG.size, w * p + 8, SIG.size * 1.5);
+    c.clip();
+  }
+  c.fillText(SIG.text, 0, 0);
+  c.restore();
+}
+
+function setupAmbient() {
+  bakeFinal();
+  const pick = (cells, n) => {
+    const out = [];
+    for (let i = 0; i < n && cells.length; i++) out.push(cells[(Math.random() * cells.length) | 0]);
+    return out;
+  };
+  twinkles = pick(regionCells[R.LIGHTS], 26).map((c) => ({
+    x: c.x,
+    y: c.y,
+    r: 7 + Math.random() * 12,
+    ph: Math.random() * Math.PI * 2,
+    sp: 0.4 + Math.random() * 0.7,
+  }));
+  ripples = pick(regionCells[R.POOL], 9).map((c) => ({
+    x: c.x,
+    y: c.y,
+    w: 70 + Math.random() * 90,
+    ph: Math.random() * Math.PI * 2,
+    sp: 0.25 + Math.random() * 0.3,
+  }));
+  sigStart = performance.now() + 500;
+  sigDone = false;
+  startAmbient();
+}
+
+function startAmbient() {
+  if (ambientId == null && finished) ambientId = requestAnimationFrame(ambientFrame);
+}
+function stopAmbient() {
+  if (ambientId != null) {
+    cancelAnimationFrame(ambientId);
+    ambientId = null;
+  }
+}
+
+function ambientFrame(ts) {
+  ambientId = null;
+  if (!finished || !finalL) return;
+  const t = ts / 1000;
+  ctx.drawImage(finalL, 0, 0);
+
+  if (!reducedMotion) {
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    /* the string lights breathe — brighter after dark */
+    const boost = TOD === "night" ? 1.8 : 1;
+    for (const tw of twinkles) {
+      const a = (0.05 + 0.06 * (0.5 + 0.5 * Math.sin(t * tw.sp * Math.PI + tw.ph))) * boost;
+      const g = ctx.createRadialGradient(tw.x, tw.y, 0, tw.x, tw.y, tw.r * 2.2);
+      g.addColorStop(0, `rgba(255, 238, 190, ${a})`);
+      g.addColorStop(1, "rgba(255, 238, 190, 0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(tw.x, tw.y, tw.r * 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    /* the pool keeps moving, barely */
+    for (const rp of ripples) {
+      const a = 0.028 + 0.028 * (0.5 + 0.5 * Math.sin(t * rp.sp * Math.PI + rp.ph));
+      const x = rp.x + Math.sin(t * 0.35 + rp.ph) * 9;
+      ctx.save();
+      ctx.translate(x, rp.y);
+      ctx.scale(1, 0.22);
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rp.w);
+      g.addColorStop(0, `rgba(225, 255, 248, ${a})`);
+      g.addColorStop(1, "rgba(225, 255, 248, 0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(0, 0, rp.w, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  drawTouchesFrame(ts);
+
+  /* the signature writes itself, then belongs to the painting */
+  if (!sigDone) {
+    const p = reducedMotion ? 1 : Math.min(1, Math.max(0, (ts - sigStart) / 1600));
+    drawSignature(ctx, p);
+    if (p >= 1) {
+      drawSignature(finalL.getContext("2d"), 1);
+      sigDone = true;
+    }
+  }
+
+  /* under reduced motion the loop only runs while something needs it */
+  const idle = reducedMotion && sigDone && !touches.length;
+  if (!idle) ambientId = requestAnimationFrame(ambientFrame);
+}
+
+/* ---------- touch the painting ---------- */
+
+function clearTouches() {
+  touches = [];
+}
+
+function drawTouchesFrame(ts) {
+  if (!touches.length) return;
+  ctx.save();
+  ctx.globalCompositeOperation = "multiply";
+  let alive = false;
+  for (const st of touches) {
+    const age = (ts - st.born) / 1000;
+    const fade = age < 3 ? Math.min(1, age * 6) : 1 - (age - 3) / 1.8;
+    if (fade <= 0) continue;
+    alive = true;
+    ctx.globalAlpha = 0.5 * fade;
+    /* a wet stroke: saturated pool of pigment with the darker backrun rim
+       real watercolor leaves where it dries */
+    const g = ctx.createRadialGradient(st.x, st.y, st.r * 0.1, st.x, st.y, st.r);
+    g.addColorStop(0, st.color);
+    g.addColorStop(0.68, st.colorMid);
+    g.addColorStop(0.9, st.colorRim);
+    g.addColorStop(1, st.colorT);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+  if (!alive) touches = [];
+}
+
+let touchActive = false;
+let lastTouch = null;
+
+function canvasPoint(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: ((e.clientX - r.left) / r.width) * W, y: ((e.clientY - r.top) / r.height) * H };
+}
+
+function addWet(p) {
+  /* the pigment is sampled from the painting where you touch it */
+  const c = colorL.getContext("2d");
+  const sx = Math.max(0, Math.min(W - 4, p.x - 2)) | 0;
+  const sy = Math.max(0, Math.min(H - 4, p.y - 2)) | 0;
+  const d = c.getImageData(sx, sy, 4, 4).data;
+  let r = 0,
+    g = 0,
+    b = 0;
+  for (let i = 0; i < d.length; i += 4) {
+    r += d[i];
+    g += d[i + 1];
+    b += d[i + 2];
+  }
+  const n = d.length / 4;
+  r /= n;
+  g /= n;
+  b /= n;
+  /* wet pigment: more chroma and more depth than the dried paint below it */
+  const avg = (r + g + b) / 3;
+  const clamp = (v) => Math.max(0, Math.min(255, v)) | 0;
+  const wr = clamp((avg + (r - avg) * 1.6) * 0.78);
+  const wg = clamp((avg + (g - avg) * 1.6) * 0.78);
+  const wb = clamp((avg + (b - avg) * 1.6) * 0.78);
+  touches.push({
+    x: p.x,
+    y: p.y,
+    r: 30 + Math.random() * 28,
+    born: performance.now(),
+    color: `rgba(${wr},${wg},${wb},0.75)`,
+    colorMid: `rgba(${wr},${wg},${wb},0.45)`,
+    colorRim: `rgba(${clamp(wr * 0.55)},${clamp(wg * 0.55)},${clamp(wb * 0.55)},0.65)`,
+    colorT: `rgba(${wr},${wg},${wb},0)`,
+  });
+  startAmbient();
+}
+
+canvas.addEventListener("pointerdown", (e) => {
+  if (!finished) return;
+  touchActive = true;
+  canvas.setPointerCapture(e.pointerId);
+  const p = canvasPoint(e);
+  lastTouch = p;
+  addWet(p);
+});
+canvas.addEventListener("pointermove", (e) => {
+  if (!touchActive || !finished) return;
+  const p = canvasPoint(e);
+  if (lastTouch && Math.hypot(p.x - lastTouch.x, p.y - lastTouch.y) < 26) return;
+  lastTouch = p;
+  addWet(p);
+});
+const endTouch = () => {
+  touchActive = false;
+  lastTouch = null;
+};
+canvas.addEventListener("pointerup", endTouch);
+canvas.addEventListener("pointercancel", endTouch);
+
+/* ---------- the favicon paints along ---------- */
+
+const favLink = document.querySelector('link[rel="icon"]');
+const favC = document.createElement("canvas");
+favC.width = favC.height = 64;
+let favLast = 0;
+
+function updateFavicon(ts, force) {
+  if (!favLink) return;
+  if (!force && ts - favLast < 1000) return;
+  favLast = ts;
+  favC.getContext("2d").drawImage(canvas, 0, 0, 64, 64);
+  favLink.setAttribute("type", "image/png");
+  favLink.setAttribute("href", favC.toDataURL("image/png"));
 }
 
 /* ---------- lifecycle ---------- */
@@ -681,6 +1089,10 @@ function resetRun() {
   cS.clearRect(0, 0, W, H);
   cCF.clearRect(0, 0, W, H);
   cCB.clearRect(0, 0, W, H);
+  stopAmbient();
+  clearTouches();
+  sigStart = null;
+  sigDone = false;
   finished = false;
   document.body.classList.remove("finished");
 }
@@ -691,6 +1103,7 @@ function paint() {
   doneS = sketchGroups.map(() => 0);
   doneW = washGroups.map(() => 0);
   repaintBtn.disabled = true;
+  updateTimeline(0);
   start = null;
   if (rafId) cancelAnimationFrame(rafId);
   rafId = requestAnimationFrame(frame);
@@ -699,6 +1112,11 @@ function paint() {
 function finish() {
   if (finished) return;
   finished = true;
+  tNow = TOTAL;
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
   cCF.fillStyle = "#fff";
   cCF.fillRect(0, 0, W, H);
   cCB.fillStyle = "#fff";
@@ -706,6 +1124,9 @@ function finish() {
   compose(1);
   repaintBtn.disabled = false;
   document.body.classList.add("finished");
+  updateTimeline(TOTAL);
+  updateFavicon(performance.now(), true);
+  setupAmbient();
 }
 
 function skipToEnd() {

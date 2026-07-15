@@ -64,6 +64,18 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
 }
 
+/* the day's light: the pane shifts with the visitor's hour, matching the
+   tint the canvas lays over the painting (see applyDaylight in portrait.js) */
+:root[data-tod="morning"] {
+  --sheet: #fdf9ee;
+}
+:root[data-tod="golden"] {
+  --sheet: #faf0dc;
+}
+:root[data-tod="night"] {
+  --sheet: #e6e2dc;
+}
+
 /* ---------- left: the easel, a full-bleed pane in the painting's
    own paper tone, so the portrait reads painted onto the page ---------- */
 
@@ -75,12 +87,70 @@
   align-items: center;
   justify-content: center;
   padding: clamp(2rem, 6vh, 4.5rem) clamp(1.5rem, 4vw, 4rem);
+  transition: background 1.2s ease;
+  /* the painter's pencil, while the painting is underway */
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 26 26'%3E%3Cpath d='M21.9 4.1c-1-1-2.6-1-3.6 0L8.6 13.8l3.6 3.6 9.7-9.7c1-1 1-2.6 0-3.6z' fill='%233b2f28'/%3E%3Cpath d='M7.5 15 5.9 20.1 11 18.5z' fill='%23d9b98c'/%3E%3Cpath d='M6.4 18.3l-.5 1.8 1.8-.5z' fill='%231d1b18'/%3E%3C/svg%3E")
+      5 20,
+    auto;
+}
+/* …and a brush once the painting is yours to touch */
+body.finished .easel {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 26 26'%3E%3Cpath d='M22.8 3.2c-3.1 1-7.2 3.9-9.6 6.6l2.9 2.9c2.7-2.4 5.6-6.5 6.7-9.5z' fill='%233b2f28'/%3E%3Cpath d='M12.4 10.6 9.9 13c-.5.5-.6 1.2-.3 1.8l1.5 1.5c.6.3 1.3.2 1.8-.3l2.4-2.5z' fill='%23a75b34'/%3E%3Cpath d='M9.4 14.9c-2.6.4-4.3 2.3-4.9 5.7 3.3-.5 5.3-2.2 5.8-4.2z' fill='%233b2f28'/%3E%3C/svg%3E")
+      5 20,
+    auto;
 }
 
 canvas#painting {
   display: block;
   width: min(100%, 30rem);
   aspect-ratio: 1 / 1;
+  /* horizontal drags paint; vertical still scrolls the page on touch */
+  touch-action: pan-y;
+}
+
+/* the timeline: a hairline under the sheet; drag the pigment dot to move
+   the brush back and forth through the painting's acts */
+.timeline {
+  position: relative;
+  width: min(100%, 30rem);
+  height: 20px;
+  margin-top: 1.5rem;
+  cursor: pointer;
+  touch-action: none;
+}
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: color-mix(in srgb, var(--ink) 20%, transparent);
+}
+.timeline-fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 1px;
+  width: 0%;
+  background: var(--rubric);
+}
+.timeline-dot {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50% 46% 52% 48%;
+  background: var(--rubric);
+  transform: translate(-50%, -50%);
+}
+.timeline:hover .timeline-dot {
+  transform: translate(-50%, -50%) scale(1.35);
+}
+.timeline:focus-visible {
+  outline: 2px solid var(--rubric);
+  outline-offset: 4px;
 }
 
 /* the repaint plate: the engraved-inscription button of the worldfall hero,
@@ -88,7 +158,7 @@ canvas#painting {
 .actions {
   display: flex;
   justify-content: center;
-  margin-top: 2.2rem;
+  margin-top: 1.4rem;
 }
 button.repaint {
   position: relative;
@@ -268,6 +338,39 @@ body.finished h1 .wash::after {
 }
 .links a:hover .value {
   text-decoration-color: color-mix(in srgb, var(--rubric) 45%, transparent);
+}
+
+/* ---------- inner pages (/now): the same hand, one narrow column ---------- */
+
+.page {
+  max-width: 38rem;
+  margin: 0 auto;
+  padding: clamp(3rem, 9vh, 6rem) clamp(1.5rem, 5vw, 3.5rem) 4rem;
+}
+.crumb {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 620;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--rubric);
+  text-decoration: none;
+  margin-bottom: 2.4rem;
+}
+.crumb:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.page h1 {
+  font-size: clamp(2.2rem, 4vw, 3rem);
+  margin-bottom: 0.5rem;
+}
+.dateline {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--faded);
+  margin: 0 0 2.2rem;
 }
 
 /* ---------- small screens: words first, portrait beneath ---------- */

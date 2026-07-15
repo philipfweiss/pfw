@@ -6,6 +6,19 @@ import Base from "../layouts/Base.astro";
   <main class="wrap">
     <div class="easel" aria-label="Watercolor self-portrait, painting itself in stages">
       <canvas id="painting" width="1000" height="1000"></canvas>
+      <div
+        class="timeline"
+        id="timeline"
+        role="slider"
+        tabindex="0"
+        aria-label="Scrub through the painting"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      >
+        <span class="timeline-fill" id="timelineFill"></span>
+        <span class="timeline-dot" id="timelineDot"></span>
+      </div>
       <div class="actions">
         <button class="repaint" id="repaint" disabled>paint it again</button>
       </div>
@@ -14,7 +27,15 @@ import Base from "../layouts/Base.astro";
     <section class="intro">
       <h1>Philip <span class="wash">Weiss</span></h1>
 
-      {/* bio text to come — the .bio styles in global.css are ready for it */}
+      <div class="bio">
+        {/* ✏️ EDIT ME — the one verifiable public fact is Netflix; the rest
+            is kept deliberately spare. */}
+        <p class="opener">
+          Engineer at Netflix. I care about things made well — big systems at
+          work, small handmade machines like this page after hours.
+        </p>
+        <p>If something here catches your eye, write to me.</p>
+      </div>
 
       <ul class="links">
         <li>
@@ -24,16 +45,21 @@ import Base from "../layouts/Base.astro";
           </a>
         </li>
         <li>
-          {/* ✏️ EDIT ME: real LinkedIn handle */}
-          <a href="https://www.linkedin.com/in/philipfweiss">
+          <a href="https://www.linkedin.com/in/weissguy/">
             <span class="label">LinkedIn</span>
-            <span class="value">linkedin.com/in/philipfweiss</span>
+            <span class="value">linkedin.com/in/weissguy</span>
           </a>
         </li>
         <li>
           <a href="mailto:philipfweiss@gmail.com">
             <span class="label">Email</span>
             <span class="value">philipfweiss@gmail.com</span>
+          </a>
+        </li>
+        <li>
+          <a href="/now">
+            <span class="label">Now</span>
+            <span class="value">what I'm up to lately</span>
           </a>
         </li>
       </ul>

@@ -27,4 +27,18 @@ browser (`web/src/scripts/portrait.js`). To swap the photo, replace both files
 (1000×1000; the mask is white-on-black figure silhouette) and adjust the region
 classifier's color rules if the scene changes.
 
+The painting is alive in small ways, all in `portrait.js`:
+
+- **Timeline** — the hairline under the sheet scrubs back and forth through the acts.
+- **Signature** — "P. Weiss" writes itself once the painting dries.
+- **Ambient** — the string lights breathe and the pool shimmers, barely
+  (skipped under `prefers-reduced-motion`).
+- **Touch** — dragging on the dried painting lays a wet stroke in pigment
+  sampled from underneath; it dries back in a few seconds.
+- **Time of day** — the sheet and painting shift with the visitor's hour
+  (`?tod=morning|day|golden|night` forces one for testing).
+- **Favicon** — the browser-tab icon paints along with the canvas.
+- **Social card** — `web/public/og.png` is the portrait caught mid-stroke;
+  regenerate with `node tools/make_og.mjs` against a running preview.
+
 See [DEPLOYMENT.md](DEPLOYMENT.md) for hosting.
