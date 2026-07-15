@@ -243,6 +243,93 @@ body.finished h1 .wash::after {
   text-decoration-color: currentColor;
 }
 
+/* ---- Margin references: marked words in the bio that carry a card.
+   A faint standing underline says "lookup-able"; hover deepens it. ---- */
+.bio .ref {
+  color: inherit;
+  text-decoration: none;
+  cursor: help;
+  border-bottom: 1px solid color-mix(in srgb, var(--rubric) 30%, transparent);
+  transition: border-color 0.15s;
+}
+.bio .ref:hover,
+.bio .ref:focus-visible {
+  border-bottom-color: color-mix(in srgb, var(--rubric) 60%, transparent);
+  outline: none;
+}
+
+/* the floating card itself: a slip of the site's paper */
+.margin-card {
+  position: fixed;
+  z-index: 68;
+  width: min(19rem, calc(100vw - 1.25rem));
+  padding: 0.75rem 0.95rem 0.85rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  box-shadow: 0 6px 24px rgba(29, 27, 24, 0.16);
+  border-radius: 2px;
+  opacity: 0;
+  transform: translateY(3px);
+  transition:
+    opacity 0.13s ease,
+    transform 0.13s ease;
+}
+.margin-card.is-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+.margin-card-kind {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--rubric);
+}
+.margin-card-title {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 1.08rem;
+  font-weight: 500;
+  margin: 0.12rem 0 0.3rem;
+  line-height: 1.2;
+}
+.margin-card-blurb {
+  display: block;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--faded);
+}
+.margin-card-more {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-family: var(--font-serif);
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--rubric);
+  text-decoration: none;
+}
+.margin-card-more:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* touch-only close, floated over the corner */
+.margin-card-close {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--paper) 80%, transparent);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
 /* the links, ruled like entries in a table of contents */
 .links {
   list-style: none;

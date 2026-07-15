@@ -721,45 +721,24 @@ function applyDaylight() {
 }
 
 /* =====================================================================
-   AFTER THE PAINTING DRIES — the signature writes itself, the string
-   lights breathe, the pool keeps moving (barely), and the visitor may
-   touch the painting: a wet stroke in the local pigment that dries
-   back to the portrait a few seconds later.
+   AFTER THE PAINTING DRIES — the string lights breathe, the pool keeps
+   moving (barely), and the visitor may write on the painting: a drag
+   lays a calligraphic ribbon of wet pigment, thick where the brush
+   moves slowly, thin where it sweeps, that dries back to the portrait
+   a few seconds later.
    ===================================================================== */
 
 let finalL = null; // the finished, daylit painting, baked once
 let ambientId = null;
 let twinkles = [];
 let ripples = [];
-let touches = [];
-let sigStart = null;
-let sigDone = false;
-
-const SIG = { text: "P. Weiss", x: 946, y: 950, size: 44, tilt: -0.05 };
+let strokes = [];
 
 function bakeFinal() {
   finalL = finalL || layer();
   const f = finalL.getContext("2d");
   f.clearRect(0, 0, W, H);
   f.drawImage(canvas, 0, 0);
-}
-
-function drawSignature(c, p) {
-  c.save();
-  c.translate(SIG.x, SIG.y);
-  c.rotate(SIG.tilt);
-  c.font = `italic 500 ${SIG.size}px "EB Garamond Variable", Georgia, serif`;
-  c.textAlign = "right";
-  c.fillStyle = "rgba(59, 47, 40, 0.8)";
-  if (p < 1) {
-    /* reveal left-to-right, a nib crossing the paper */
-    const w = c.measureText(SIG.text).width;
-    c.beginPath();
-    c.rect(-w - 8, -SIG.size, w * p + 8, SIG.size * 1.5);
-    c.clip();
-  }
-  c.fillText(SIG.text, 0, 0);
-  c.restore();
 }
 
 function setupAmbient() {
@@ -783,8 +762,6 @@ function setupAmbient() {
     ph: Math.random() * Math.PI * 2,
     sp: 0.25 + Math.random() * 0.3,
   }));
-  sigStart = performance.now() + 500;
-  sigDone = false;
   startAmbient();
 }
 
@@ -838,66 +815,112 @@ function ambientFrame(ts) {
     ctx.restore();
   }
 
-  drawTouchesFrame(ts);
-
-  /* the signature writes itself, then belongs to the painting */
-  if (!sigDone) {
-    const p = reducedMotion ? 1 : Math.min(1, Math.max(0, (ts - sigStart) / 1600));
-    drawSignature(ctx, p);
-    if (p >= 1) {
-      drawSignature(finalL.getContext("2d"), 1);
-      sigDone = true;
-    }
-  }
+  drawStrokesFrame(ts);
 
   /* under reduced motion the loop only runs while something needs it */
-  const idle = reducedMotion && sigDone && !touches.length;
+  const idle = reducedMotion && !strokes.length;
   if (!idle) ambientId = requestAnimationFrame(ambientFrame);
 }
 
-/* ---------- touch the painting ---------- */
+/* ---------- write on the painting: watercolor calligraphy ---------- */
 
-function clearTouches() {
-  touches = [];
+function clearStrokes() {
+  strokes = [];
 }
 
-function drawTouchesFrame(ts) {
-  if (!touches.length) return;
+/* one closed ribbon polygon along the stroke's spine, its width breathing
+   with the recorded per-point widths; a single fill, so the wash is even */
+function ribbonPath(c, pts, scale) {
+  const L = [];
+  const Rt = [];
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    const q = pts[Math.min(pts.length - 1, i + 1)];
+    const o = pts[Math.max(0, i - 1)];
+    let dx = q.x - o.x,
+      dy = q.y - o.y;
+    const len = Math.hypot(dx, dy) || 1;
+    dx /= len;
+    dy /= len;
+    const hw = (p.w * scale) / 2;
+    L.push({ x: p.x - dy * hw, y: p.y + dx * hw });
+    Rt.push({ x: p.x + dy * hw, y: p.y - dx * hw });
+  }
+  c.beginPath();
+  c.moveTo(L[0].x, L[0].y);
+  for (let i = 1; i < L.length; i++) {
+    const m = { x: (L[i - 1].x + L[i].x) / 2, y: (L[i - 1].y + L[i].y) / 2 };
+    c.quadraticCurveTo(L[i - 1].x, L[i - 1].y, m.x, m.y);
+  }
+  c.lineTo(Rt[Rt.length - 1].x, Rt[Rt.length - 1].y);
+  for (let i = Rt.length - 2; i >= 0; i--) {
+    const m = { x: (Rt[i + 1].x + Rt[i].x) / 2, y: (Rt[i + 1].y + Rt[i].y) / 2 };
+    c.quadraticCurveTo(Rt[i + 1].x, Rt[i + 1].y, m.x, m.y);
+  }
+  c.closePath();
+}
+
+function pool(c, p, r, color) {
+  const g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+  g.addColorStop(0, color);
+  g.addColorStop(1, color.replace(/[\d.]+\)$/, "0)"));
+  c.fillStyle = g;
+  c.beginPath();
+  c.arc(p.x, p.y, r, 0, Math.PI * 2);
+  c.fill();
+}
+
+function drawStrokesFrame(ts) {
+  if (!strokes.length) return;
   ctx.save();
   ctx.globalCompositeOperation = "multiply";
   let alive = false;
-  for (const st of touches) {
-    const age = (ts - st.born) / 1000;
-    const fade = age < 3 ? Math.min(1, age * 6) : 1 - (age - 3) / 1.8;
+  for (const s of strokes) {
+    /* a stroke still being written never fades; the clock starts at liftoff */
+    const age = s.born == null ? 0 : (ts - s.born) / 1000;
+    const fade = age < 2.8 ? 1 : 1 - (age - 2.8) / 1.6;
     if (fade <= 0) continue;
     alive = true;
-    ctx.globalAlpha = 0.5 * fade;
-    /* a wet stroke: saturated pool of pigment with the darker backrun rim
-       real watercolor leaves where it dries */
-    const g = ctx.createRadialGradient(st.x, st.y, st.r * 0.1, st.x, st.y, st.r);
-    g.addColorStop(0, st.color);
-    g.addColorStop(0.68, st.colorMid);
-    g.addColorStop(0.9, st.colorRim);
-    g.addColorStop(1, st.colorT);
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
-    ctx.fill();
+    const first = s.pts[0];
+    const last = s.pts[s.pts.length - 1];
+    if (s.pts.length > 1) {
+      /* soft halo of water around the ribbon */
+      ctx.globalAlpha = 0.13 * fade;
+      ribbonPath(ctx, s.pts, 2.0);
+      ctx.fillStyle = s.color;
+      ctx.fill();
+      /* the ribbon itself */
+      ctx.globalAlpha = 0.5 * fade;
+      ribbonPath(ctx, s.pts, 1.0);
+      ctx.fillStyle = s.color;
+      ctx.fill();
+      /* the wet center, where the pigment is still standing */
+      ctx.globalAlpha = 0.3 * fade;
+      ribbonPath(ctx, s.pts, 0.42);
+      ctx.fillStyle = s.colorDeep;
+      ctx.fill();
+    }
+    /* the brush lands and lifts: pigment pools at both ends */
+    ctx.globalAlpha = 0.34 * fade;
+    pool(ctx, first, first.w * 0.95, s.colorDeep);
+    if (last !== first) pool(ctx, last, last.w * 0.8, s.colorDeep);
   }
   ctx.restore();
-  if (!alive) touches = [];
+  if (!alive) strokes = [];
 }
 
-let touchActive = false;
-let lastTouch = null;
+let activeStroke = null;
+let prevPt = null;
+let prevT = 0;
 
 function canvasPoint(e) {
   const r = canvas.getBoundingClientRect();
   return { x: ((e.clientX - r.left) / r.width) * W, y: ((e.clientY - r.top) / r.height) * H };
 }
 
-function addWet(p) {
-  /* the pigment is sampled from the painting where you touch it */
+/* the pigment is sampled where the brush lands, then carried the whole
+   stroke, saturated and deepened the way wet paint sits on dry */
+function loadBrush(p) {
   const c = colorL.getContext("2d");
   const sx = Math.max(0, Math.min(W - 4, p.x - 2)) | 0;
   const sy = Math.max(0, Math.min(H - 4, p.y - 2)) | 0;
@@ -914,46 +937,61 @@ function addWet(p) {
   r /= n;
   g /= n;
   b /= n;
-  /* wet pigment: more chroma and more depth than the dried paint below it */
   const avg = (r + g + b) / 3;
   const clamp = (v) => Math.max(0, Math.min(255, v)) | 0;
-  const wr = clamp((avg + (r - avg) * 1.6) * 0.78);
-  const wg = clamp((avg + (g - avg) * 1.6) * 0.78);
-  const wb = clamp((avg + (b - avg) * 1.6) * 0.78);
-  touches.push({
-    x: p.x,
-    y: p.y,
-    r: 30 + Math.random() * 28,
-    born: performance.now(),
-    color: `rgba(${wr},${wg},${wb},0.75)`,
-    colorMid: `rgba(${wr},${wg},${wb},0.45)`,
-    colorRim: `rgba(${clamp(wr * 0.55)},${clamp(wg * 0.55)},${clamp(wb * 0.55)},0.65)`,
-    colorT: `rgba(${wr},${wg},${wb},0)`,
-  });
-  startAmbient();
+  const wr = clamp((avg + (r - avg) * 1.6) * 0.76);
+  const wg = clamp((avg + (g - avg) * 1.6) * 0.76);
+  const wb = clamp((avg + (b - avg) * 1.6) * 0.76);
+  return {
+    color: `rgba(${wr},${wg},${wb},0.8)`,
+    colorDeep: `rgba(${clamp(wr * 0.6)},${clamp(wg * 0.6)},${clamp(wb * 0.6)},0.7)`,
+  };
+}
+
+/* nib angle: a broad-edge pen held at ~40 degrees, so horizontal sweeps
+   run thin and diagonal pulls run broad, like real calligraphy */
+const NIB = -0.7;
+const W_MAX = 42;
+const W_MIN = 6;
+
+function strokeWidth(p, d, dt) {
+  const v = d / Math.max(1, dt); // px per ms: slow = pigment pools wide
+  const speed = Math.max(0, Math.min(1, 1 - v / 2.4));
+  const ang = Math.atan2(p.y - prevPt.y, p.x - prevPt.x);
+  const nib = 0.5 + 0.5 * Math.abs(Math.sin(ang - NIB));
+  const raw = W_MAX * (0.3 + 0.7 * speed) * nib;
+  const prevW = activeStroke.pts[activeStroke.pts.length - 1].w;
+  return Math.max(W_MIN, prevW * 0.55 + raw * 0.45); // eased, so the ribbon breathes
 }
 
 canvas.addEventListener("pointerdown", (e) => {
   if (!finished) return;
-  touchActive = true;
   canvas.setPointerCapture(e.pointerId);
   const p = canvasPoint(e);
-  lastTouch = p;
-  addWet(p);
+  activeStroke = { pts: [{ x: p.x, y: p.y, w: 16 }], born: null, ...loadBrush(p) };
+  strokes.push(activeStroke);
+  prevPt = p;
+  prevT = performance.now();
+  startAmbient();
 });
 canvas.addEventListener("pointermove", (e) => {
-  if (!touchActive || !finished) return;
+  if (!activeStroke || !finished) return;
   const p = canvasPoint(e);
-  if (lastTouch && Math.hypot(p.x - lastTouch.x, p.y - lastTouch.y) < 26) return;
-  lastTouch = p;
-  addWet(p);
+  const d = Math.hypot(p.x - prevPt.x, p.y - prevPt.y);
+  if (d < 7) return;
+  const now = performance.now();
+  const w = strokeWidth(p, d, now - prevT);
+  if (activeStroke.pts.length < 400) activeStroke.pts.push({ x: p.x, y: p.y, w });
+  prevPt = p;
+  prevT = now;
 });
-const endTouch = () => {
-  touchActive = false;
-  lastTouch = null;
+const endStroke = () => {
+  if (activeStroke) activeStroke.born = performance.now();
+  activeStroke = null;
+  prevPt = null;
 };
-canvas.addEventListener("pointerup", endTouch);
-canvas.addEventListener("pointercancel", endTouch);
+canvas.addEventListener("pointerup", endStroke);
+canvas.addEventListener("pointercancel", endStroke);
 
 /* ---------- the favicon paints along ---------- */
 
@@ -977,9 +1015,7 @@ function resetRun() {
   cCF.clearRect(0, 0, W, H);
   cCB.clearRect(0, 0, W, H);
   stopAmbient();
-  clearTouches();
-  sigStart = null;
-  sigDone = false;
+  clearStrokes();
   finished = false;
   document.body.classList.remove("finished");
 }

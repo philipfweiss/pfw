@@ -1,5 +1,75 @@
 ---
 import Base from "../layouts/Base.astro";
+
+// The Margin cards: hover (or tap) a marked word in the bio and a small
+// card introduces it, the worldfall Margin-reference idiom. kind/title/blurb
+// plus an onward link shown in the card's foot (and followed by clicking
+// the word itself, where there is one).
+const cards = {
+  netflix: {
+    kind: "Employer",
+    title: "Netflix",
+    blurb:
+      "Streaming, and a famously large amount of data about what the world watches. The Data Platform is the org that keeps that data fast, correct, and usable.",
+    href: "https://netflixtechblog.com",
+    link: "netflixtechblog.com",
+  },
+  "semantic-layers": {
+    kind: "Idea",
+    title: "Semantic layer",
+    blurb:
+      "A shared vocabulary between a company's data and the people asking questions of it: metrics defined once, correctly, instead of re-derived in every dashboard.",
+    href: "https://en.wikipedia.org/wiki/Semantic_layer",
+    link: "wikipedia.org",
+  },
+  spark: {
+    kind: "Technology",
+    title: "Apache Spark",
+    blurb:
+      "The open-source engine most large companies use to compute over very large datasets. I work on the infrastructure that runs it at Netflix scale.",
+    href: "https://spark.apache.org",
+    link: "spark.apache.org",
+  },
+  tooling: {
+    kind: "Craft",
+    title: "Data developer tooling",
+    blurb:
+      "IDEs, CLIs, CI, and paved paths for the people whose code is data pipelines. The job is making that daily loop fast and pleasant.",
+    href: null,
+    link: null,
+  },
+  airbnb: {
+    kind: "Employer",
+    title: "Airbnb",
+    blurb:
+      "Where I spent six years, most of them building Minerva. Home rentals out front; behind it, one of the industry's better data cultures.",
+    href: "https://medium.com/airbnb-engineering",
+    link: "the Airbnb tech blog",
+  },
+  minerva: {
+    kind: "Project",
+    title: "Minerva",
+    blurb:
+      "Airbnb's metrics platform: thousands of metrics defined once and computed consistently everywhere they appear. The project that taught me what a semantic layer has to be.",
+    href: "https://medium.com/airbnb-engineering/how-airbnb-achieved-metric-consistency-at-scale-f23cc53dea70",
+    link: "the Airbnb tech blog",
+  },
+  datajunction: {
+    kind: "Project",
+    title: "DataJunction",
+    blurb:
+      "Netflix's open-source semantic layer: metrics and the data models behind them defined in SQL as a graph of nodes, with DJ working out the joins and writing the queries.",
+    href: "https://github.com/DataJunction/dj",
+    link: "github.com/DataJunction",
+  },
+  stanford: {
+    kind: "School",
+    title: "Stanford University",
+    blurb: "Computer science, a BS and an MS, both concentrated in artificial intelligence.",
+    href: "https://cs.stanford.edu",
+    link: "cs.stanford.edu",
+  },
+};
 ---
 
 <Base>
@@ -16,22 +86,43 @@ import Base from "../layouts/Base.astro";
 
       <div class="bio">
         <p>
-          I'm a Senior Software Engineer on Netflix's Data Platform, where I
-          work on Spark infrastructure, semantic layers, and the tooling data
-          developers use every day.
+          I'm a Senior Software Engineer on <a
+            class="ref"
+            data-card="netflix"
+            href={cards.netflix.href}>Netflix</a
+          >'s Data Platform, where I work on <a
+            class="ref"
+            data-card="semantic-layers"
+            href={cards["semantic-layers"].href}>semantic layers</a
+          >, <a class="ref" data-card="spark" href={cards.spark.href}>Spark</a>
+          infrastructure, and <span class="ref" data-card="tooling" tabindex="0"
+            >the tooling data developers use every day</span
+          >.
         </p>
         <p>
           Semantic layers are the thread that runs through my career: I spent
-          six years at Airbnb building <a
-            href="https://medium.com/airbnb-engineering/how-airbnb-achieved-metric-consistency-at-scale-f23cc53dea70"
-            >Minerva</a
+          six years at <a
+            class="ref"
+            data-card="airbnb"
+            href={cards.airbnb.href}>Airbnb</a
+          > building <a
+            class="ref"
+            data-card="minerva"
+            href={cards.minerva.href}>Minerva</a
           >, its metrics platform, and I contribute to <a
-            href="https://github.com/DataJunction/dj">DataJunction</a
+            class="ref"
+            data-card="datajunction"
+            href={cards.datajunction.href}>DataJunction</a
           >, Netflix's open-source semantic layer.
         </p>
         <p>
-          I studied computer science at Stanford, a BS and an MS, both focused
-          on artificial intelligence.
+          I studied computer science at <a
+            class="ref"
+            data-card="stanford"
+            href={cards.stanford.href}>Stanford</a
+          >, a BS and an MS, both focused on artificial intelligence, though
+          the systems programming and database classes are the ones that
+          stuck.
         </p>
       </div>
 
@@ -58,5 +149,7 @@ import Base from "../layouts/Base.astro";
     </section>
   </main>
 
+  <script type="application/json" id="margin-cards" set:html={JSON.stringify(cards)} />
   <script src="../scripts/portrait.js"></script>
+  <script src="../scripts/cards.js"></script>
 </Base>
