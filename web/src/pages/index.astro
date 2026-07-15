@@ -46,9 +46,9 @@ const cards = {
     title: "Minerva",
     blurb:
       "Airbnb's metrics platform: thousands of metrics defined once and computed consistently everywhere they appear. The project that taught me what a semantic layer has to be.",
-    href: "https://medium.com/airbnb-engineering/how-airbnb-achieved-metric-consistency-at-scale-f23cc53dea70",
-    link: "the Airbnb tech blog",
-    img: "/cards/minerva.svg",
+    href: "https://www.youtube.com/watch?v=JHQqi5fdo-s",
+    link: "watch the talk",
+    img: "/cards/minerva.jpg",
     imgKind: "logo",
   },
   datajunction: {
@@ -68,8 +68,8 @@ const cards = {
       "A BS and an MS in computer science, both focused on artificial intelligence. Twenty-five technical courses on the transcript, and it's CS145 (Databases) that ended up running my life.",
     href: "https://cs.stanford.edu",
     link: "cs.stanford.edu",
-    img: "/cards/stanford.jpg",
-    imgKind: "cover",
+    img: "/cards/stanford.png",
+    imgKind: "logo",
   },
 };
 // Hidden-surface SEO: none of this appears on the page. The description is
@@ -139,7 +139,7 @@ const personLd = {
             class="ref"
             data-card="minerva"
             href={cards.minerva.href}>Minerva</a
-          >, its metrics platform, and I'm doing it again with <a
+          >, its metrics platform, and I have a hand in <a
             class="ref"
             data-card="datajunction"
             href={cards.datajunction.href}>DataJunction</a
@@ -169,17 +169,12 @@ const personLd = {
           </a>
         </li>
         <li>
-          <a href="mailto:philipfweiss@gmail.com">
+          {/* no address in the static HTML: the parts live in data-* and the
+              mailto is assembled on first interaction (harvesters that don't
+              run JS never see it) */}
+          <a href="#" id="email-link" data-u="philipfweiss" data-d="gmail.com">
             <span class="label">Email</span>
-            <span class="value">philipfweiss@gmail.com</span>
-          </a>
-        </li>
-        <li>
-          <a href="https://www.youtube.com/watch?v=JHQqi5fdo-s">
-            <span class="label">Talk</span>
-            <span class="value"
-              >10 Problems Airbnb Solved by Building a Metrics Platform</span
-            >
+            <span class="value">first name, then an f, then last name, at gmail</span>
           </a>
         </li>
       </ul>
@@ -189,4 +184,14 @@ const personLd = {
   <script type="application/json" id="margin-cards" set:html={JSON.stringify(cards)} />
   <script src="../scripts/portrait.js"></script>
   <script src="../scripts/cards.js"></script>
+  <script>
+    /* the email link becomes real the moment a person reaches for it */
+    const el = document.getElementById("email-link");
+    const arm = () => {
+      if (el instanceof HTMLAnchorElement) el.href = `mailto:${el.dataset.u}@${el.dataset.d}`;
+    };
+    el?.addEventListener("pointerenter", arm);
+    el?.addEventListener("focus", arm);
+    el?.addEventListener("click", arm);
+  </script>
 </Base>
