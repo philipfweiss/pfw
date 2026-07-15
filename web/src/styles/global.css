@@ -185,17 +185,36 @@ button.repaint:disabled {
   cursor: default;
 }
 
-/* the quiet companion to the plate: the painting engine's playground */
+/* the quiet companion to the plate: a smaller engraved plate of its own,
+   kin to the repaint button the way worldfall's continue link is kin to
+   its begin-reading plate */
 .playground-link {
   font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 0.92rem;
-  color: var(--faded);
+  font-size: 0.84rem;
+  text-transform: lowercase;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+  color: color-mix(in srgb, var(--ink) 78%, transparent);
   text-decoration: none;
-  transition: color 0.2s;
+  padding: 0.6em 1.1em;
+  border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+  background: color-mix(in srgb, var(--paper) 32%, transparent);
+  transition:
+    letter-spacing 220ms ease,
+    text-indent 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease;
 }
 .playground-link:hover {
-  color: var(--rubric);
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--ink) 48%, transparent);
+}
+.playground-link:focus-visible {
+  outline: 2px solid var(--rubric);
+  outline-offset: 3px;
 }
 
 /* ---------- right: the words ---------- */
