@@ -58,3 +58,20 @@ token cannot write DNS, so this is the one remaining dashboard step:
    `fly certs add api.philipweiss.net -a philipweiss-api`, then add DNS-only
    (grey cloud) A/AAAA records pointing at the IPs from
    `fly ips list -a philipweiss-api`.
+
+## The autoportrait playground (philipweiss.net/autoportrait)
+
+The playground from github.com/philipfweiss/autoportrait is hosted as static
+files under `web/public/autoportrait/`. To refresh it after engine changes:
+
+```bash
+cd ../autoportrait
+BASE_PATH=/autoportrait/ npm run build
+rm -rf ../pfw/web/public/autoportrait
+cp -R demo/dist ../pfw/web/public/autoportrait
+cd ../pfw/web && npm run build
+npx wrangler pages deploy dist --project-name=philipweiss --branch=main
+```
+
+The site's security headers (including the CSP) apply to it; the playground
+ships no inline scripts, so it runs clean under script-src 'self'.
