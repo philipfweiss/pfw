@@ -35,7 +35,7 @@ const cards = {
     kind: "Employer",
     title: "Airbnb",
     blurb:
-      "Where I spent six years. Most people remember the treehouses; I remember thirty thousand metrics finally agreeing with each other.",
+      "Six years as a software engineer on data infrastructure, most of them spent building Minerva, the company's metrics platform.",
     href: "https://medium.com/airbnb-engineering",
     link: "the Airbnb tech blog",
     img: "/cards/airbnb.svg",
@@ -45,7 +45,7 @@ const cards = {
     kind: "Project",
     title: "Minerva",
     blurb:
-      "Airbnb's metrics platform: thousands of metrics defined once and computed consistently everywhere they appear. The project that taught me what a semantic layer has to be.",
+      "Airbnb's metrics platform and single source of truth: over 30,000 metrics and 4,000 dimensions, defined once and served consistently to every dashboard and decision.",
     href: "https://medium.com/airbnb-engineering/how-airbnb-achieved-metric-consistency-at-scale-f23cc53dea70",
     link: "the blog post, part one",
     more: [
@@ -76,7 +76,7 @@ const cards = {
     kind: "School",
     title: "Stanford University",
     blurb:
-      "A BS and an MS in computer science, both focused on artificial intelligence. Twenty-five technical courses on the transcript, and it's CS145 (Databases) that ended up running my life.",
+      "A BS in computer science in 2019 and an MS in 2022, completed while working. I studied artificial intelligence and minored in Chinese.",
     href: "https://cs.stanford.edu",
     link: "cs.stanford.edu",
     img: "/cards/stanford.png",
@@ -119,9 +119,13 @@ const personLd = {
   <script is:inline type="application/ld+json" set:html={JSON.stringify(personLd)} />
   <main class="wrap">
     <div class="easel" aria-label="Watercolor self-portrait, painting itself in stages">
-      <canvas id="painting" width="1000" height="1000"></canvas>
-      <div class="actions">
-        <button class="repaint" id="repaint" disabled>paint it again</button>
+      {/* the stage is what centers vertically; the button hangs below it so
+          the portrait itself aligns with the centered text column */}
+      <div class="stage">
+        <canvas id="painting" width="1000" height="1000"></canvas>
+        <div class="actions">
+          <button class="repaint" id="repaint" disabled>paint it again</button>
+        </div>
       </div>
     </div>
 
@@ -134,7 +138,7 @@ const personLd = {
             class="ref"
             data-card="netflix"
             href={cards.netflix.href}>Netflix</a
-          >'s Data Platform, where I work on the semantic layer, <a
+          >'s Data Platform, where I work on its semantic layer, <a
             class="ref ref-quiet"
             data-card="spark"
             href={cards.spark.href}>Spark</a

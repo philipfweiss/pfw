@@ -90,18 +90,54 @@
   transition: background 1.2s ease;
 }
 
+/* only the stage takes part in the pane's vertical centering, so the
+   portrait's center lines up with the centered text column across the gutter;
+   the repaint plate hangs beneath without pushing the canvas up */
+.stage {
+  position: relative;
+  width: min(100%, 30rem);
+}
+
 canvas#painting {
   display: block;
-  width: min(100%, 30rem);
+  width: 100%;
   aspect-ratio: 1 / 1;
 }
 
 /* the repaint plate: the engraved-inscription button of the worldfall hero,
-   set as tracked small-caps inside a double hairline frame */
+   set as tracked small-caps inside a double hairline frame. It keeps its
+   place on the page but only appears once the painting has dried. */
 .actions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: center;
   margin-top: 2.2rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease,
+    visibility 0s linear 0.7s;
+}
+body.finished .actions {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .actions {
+    transition: none;
+  }
+  body.finished .actions {
+    transition: none;
+  }
 }
 button.repaint {
   position: relative;
@@ -281,10 +317,13 @@ body.finished h1 .wash::after {
   border-bottom: 1px solid var(--rule);
   mix-blend-mode: multiply;
 }
+/* logos sit contained in a taller band with generous air, like a mark
+   printed in the middle of a title page (the mark's optical size holds;
+   the extra height goes to margin) */
 .margin-card-img.is-logo {
-  aspect-ratio: 3 / 1;
+  aspect-ratio: 5 / 2;
   object-fit: contain;
-  padding: 0.9rem 1.4rem;
+  padding: 1.55rem 1.8rem;
 }
 .margin-card-body {
   display: block;
@@ -414,6 +453,11 @@ body.finished h1 .wash::after {
     order: 2;
     border-right: none;
     border-top: 1px solid var(--rule-soft);
+  }
+  /* stacked, there is no cross-column alignment to protect: let the button
+     take real space again so it can't overflow the pane */
+  .actions {
+    position: static;
   }
   .intro {
     order: 1;
