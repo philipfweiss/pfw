@@ -230,11 +230,6 @@ body.finished h1 .wash::after {
 .bio a:hover {
   text-decoration-color: currentColor;
 }
-/* the one standing invitation: an aside in the margin's voice */
-.bio .invite {
-  font-style: italic;
-  margin-top: 1.3em;
-}
 
 /* ---- Margin references: marked words in the bio that carry a card.
    A faint standing underline says "lookup-able"; hover deepens it. ---- */
