@@ -5,10 +5,10 @@ explanations). Two deployables:
 
 | piece | host | status |
 | ----- | ---- | ------ |
-| site (`web/`) | Cloudflare Pages | not yet created |
-| api (`api/`)  | Fly.io, app `pfw-api` | not yet created |
-| domain | TBD — buy at Cloudflare Registrar | not yet bought |
-| code | GitHub `philipfweiss/pfw` | pending first push |
+| site (`web/`) | Cloudflare Pages → https://philipweiss.net | Pages project not yet created |
+| api (`api/`)  | Fly.io, app `pfw-api` | live at pfw-api.fly.dev |
+| domain | philipweiss.net | bought 2026-07-14 |
+| code | GitHub | https://github.com/philipfweiss/pfw |
 
 ## The site (Cloudflare Pages)
 
@@ -40,12 +40,13 @@ After that, `cd api && fly deploy` ships changes. The app sleeps when idle
 There are no secrets yet. When the API grows a real feature, set its config with
 `fly secrets set -a pfw-api KEY=value` and read it from `os.environ` in main.py.
 
-## The domain (when bought)
+## The domain (philipweiss.net)
 
-1. Buy at Cloudflare Registrar (the zone appears automatically, like worldfall.ink).
-2. Pages → the project → Custom domains → add `<domain>` and `www.<domain>`.
-3. Set `site: "https://<domain>"` in `web/astro.config.mjs`.
-4. If the API should have a pretty name: `fly certs add api.<domain> -a pfw-api`,
-   then add DNS-only (grey cloud) A/AAAA records pointing at the IPs from
-   `fly ips list -a pfw-api`, and set `fly secrets set PFW_SITE_URL=https://<domain>`
-   so CORS admits the production origin.
+`site` in `web/astro.config.mjs` and the API's CORS default already point at
+https://philipweiss.net. Remaining dashboard steps once the Pages project exists:
+
+1. Pages → the project → Custom domains → add `philipweiss.net` and
+   `www.philipweiss.net` (HTTPS is automatic).
+2. Optional, only when the API grows a real feature — a pretty API hostname:
+   `fly certs add api.philipweiss.net -a pfw-api`, then add DNS-only (grey
+   cloud) A/AAAA records pointing at the IPs from `fly ips list -a pfw-api`.

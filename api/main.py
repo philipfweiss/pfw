@@ -10,7 +10,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-SITE_URL = os.environ.get("PFW_SITE_URL", "")
+SITE_URL = os.environ.get("PFW_SITE_URL", "https://philipweiss.net")
 
 app = FastAPI(title="pfw-api", docs_url=None, redoc_url=None)
 
