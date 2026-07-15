@@ -60,8 +60,8 @@
 .wrap {
   min-height: 100svh;
   display: grid;
-  /* the portrait is the hero: give its pane a little more of the page */
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  /* the words get the larger share; the portrait pane sits like a wide margin */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
 }
 
 /* ---------- left: the easel, a full-bleed pane in the painting's
@@ -79,7 +79,7 @@
 
 canvas#painting {
   display: block;
-  width: min(100%, 38rem);
+  width: min(100%, 30rem);
   aspect-ratio: 1 / 1;
 }
 
@@ -140,7 +140,7 @@ button.repaint:disabled {
   align-self: center;
   justify-self: center;
   width: 100%;
-  max-width: 34rem;
+  max-width: 38rem;
   padding: clamp(2rem, 6vh, 4.5rem) clamp(1.5rem, 5vw, 3.5rem);
 }
 
