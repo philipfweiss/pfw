@@ -4,7 +4,12 @@ import Base from "../layouts/Base.astro";
 // The Margin cards: hover (or tap) a marked word in the bio and a small
 // card introduces it, the worldfall Margin-reference idiom. kind/title/blurb
 // plus an onward link shown in the card's foot (and followed by clicking
-// the word itself, where there is one).
+// the word itself, where there is one). img: "logo" images sit contained on
+// the paper; "cover" images fill the card's top like a plate.
+// Image sources (all served locally from public/cards/): the Netflix,
+// Airbnb, and Spark marks via Wikimedia Commons; the DataJunction sign is
+// its GitHub org avatar; Hoover Tower photo from Wikimedia Commons
+// (CC BY-SA); the Minerva is a Herculaneum fresco, public domain.
 const cards = {
   netflix: {
     kind: "Employer",
@@ -13,6 +18,8 @@ const cards = {
       "Streaming, and a famously large amount of data about what the world watches. The Data Platform is the org that keeps that data fast, correct, and usable.",
     href: "https://netflixtechblog.com",
     link: "netflixtechblog.com",
+    img: "/cards/netflix.svg",
+    imgKind: "logo",
   },
   spark: {
     kind: "Technology",
@@ -21,14 +28,18 @@ const cards = {
       "The open-source engine most large companies use to compute over very large datasets. I work on the infrastructure that runs it at Netflix scale.",
     href: "https://spark.apache.org",
     link: "spark.apache.org",
+    img: "/cards/spark.svg",
+    imgKind: "logo",
   },
   airbnb: {
     kind: "Employer",
     title: "Airbnb",
     blurb:
-      "Where I spent six years, most of them building Minerva. Home rentals out front; behind it, one of the industry's better data cultures.",
+      "Where I spent six years. Most people remember the treehouses; I remember twelve thousand metrics finally agreeing with each other.",
     href: "https://medium.com/airbnb-engineering",
     link: "the Airbnb tech blog",
+    img: "/cards/airbnb.svg",
+    imgKind: "logo",
   },
   minerva: {
     kind: "Project",
@@ -37,6 +48,8 @@ const cards = {
       "Airbnb's metrics platform: thousands of metrics defined once and computed consistently everywhere they appear. The project that taught me what a semantic layer has to be.",
     href: "https://medium.com/airbnb-engineering/how-airbnb-achieved-metric-consistency-at-scale-f23cc53dea70",
     link: "the Airbnb tech blog",
+    img: "/cards/minerva.jpg",
+    imgKind: "cover",
   },
   datajunction: {
     kind: "Project",
@@ -45,13 +58,18 @@ const cards = {
       "Netflix's open-source semantic layer: metrics and the data models behind them defined in SQL as a graph of nodes, with DJ working out the joins and writing the queries.",
     href: "https://github.com/DataJunction/dj",
     link: "github.com/DataJunction",
+    img: "/cards/datajunction.png",
+    imgKind: "logo",
   },
   stanford: {
     kind: "School",
     title: "Stanford University",
-    blurb: "Computer science, a BS and an MS, both concentrated in artificial intelligence.",
+    blurb:
+      "A BS and an MS in computer science, both focused on artificial intelligence. Twenty-five technical courses on the transcript, and it's CS145 (Databases) that ended up running my life.",
     href: "https://cs.stanford.edu",
     link: "cs.stanford.edu",
+    img: "/cards/stanford.jpg",
+    imgKind: "cover",
   },
 };
 ---
@@ -90,7 +108,7 @@ const cards = {
             class="ref"
             data-card="minerva"
             href={cards.minerva.href}>Minerva</a
-          >, its metrics platform, and I contribute to <a
+          >, its metrics platform, and I'm doing it again with <a
             class="ref"
             data-card="datajunction"
             href={cards.datajunction.href}>DataJunction</a
@@ -101,9 +119,8 @@ const cards = {
             class="ref"
             data-card="stanford"
             href={cards.stanford.href}>Stanford</a
-          >, a BS and an MS, both focused on artificial intelligence, though
-          the systems programming and database classes are the ones that
-          stuck.
+          >, a BS and an MS, both focused on artificial intelligence, with a
+          heavy side of systems and databases.
         </p>
       </div>
 

@@ -721,18 +721,14 @@ function applyDaylight() {
 }
 
 /* =====================================================================
-   AFTER THE PAINTING DRIES — the string lights breathe, the pool keeps
-   moving (barely), and the visitor may write on the painting: a drag
-   lays a calligraphic ribbon of wet pigment, thick where the brush
-   moves slowly, thin where it sweeps, that dries back to the portrait
-   a few seconds later.
+   AFTER THE PAINTING DRIES — the string lights breathe and the pool
+   keeps moving, barely.
    ===================================================================== */
 
 let finalL = null; // the finished, daylit painting, baked once
 let ambientId = null;
 let twinkles = [];
 let ripples = [];
-let strokes = [];
 
 function bakeFinal() {
   finalL = finalL || layer();
@@ -815,183 +811,9 @@ function ambientFrame(ts) {
     ctx.restore();
   }
 
-  drawStrokesFrame(ts);
-
-  /* under reduced motion the loop only runs while something needs it */
-  const idle = reducedMotion && !strokes.length;
-  if (!idle) ambientId = requestAnimationFrame(ambientFrame);
+  /* under reduced motion there is nothing to animate after the bake */
+  if (!reducedMotion) ambientId = requestAnimationFrame(ambientFrame);
 }
-
-/* ---------- write on the painting: watercolor calligraphy ---------- */
-
-function clearStrokes() {
-  strokes = [];
-}
-
-/* one closed ribbon polygon along the stroke's spine, its width breathing
-   with the recorded per-point widths; a single fill, so the wash is even */
-function ribbonPath(c, pts, scale) {
-  const L = [];
-  const Rt = [];
-  for (let i = 0; i < pts.length; i++) {
-    const p = pts[i];
-    const q = pts[Math.min(pts.length - 1, i + 1)];
-    const o = pts[Math.max(0, i - 1)];
-    let dx = q.x - o.x,
-      dy = q.y - o.y;
-    const len = Math.hypot(dx, dy) || 1;
-    dx /= len;
-    dy /= len;
-    const hw = (p.w * scale) / 2;
-    L.push({ x: p.x - dy * hw, y: p.y + dx * hw });
-    Rt.push({ x: p.x + dy * hw, y: p.y - dx * hw });
-  }
-  c.beginPath();
-  c.moveTo(L[0].x, L[0].y);
-  for (let i = 1; i < L.length; i++) {
-    const m = { x: (L[i - 1].x + L[i].x) / 2, y: (L[i - 1].y + L[i].y) / 2 };
-    c.quadraticCurveTo(L[i - 1].x, L[i - 1].y, m.x, m.y);
-  }
-  c.lineTo(Rt[Rt.length - 1].x, Rt[Rt.length - 1].y);
-  for (let i = Rt.length - 2; i >= 0; i--) {
-    const m = { x: (Rt[i + 1].x + Rt[i].x) / 2, y: (Rt[i + 1].y + Rt[i].y) / 2 };
-    c.quadraticCurveTo(Rt[i + 1].x, Rt[i + 1].y, m.x, m.y);
-  }
-  c.closePath();
-}
-
-function pool(c, p, r, color) {
-  const g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-  g.addColorStop(0, color);
-  g.addColorStop(1, color.replace(/[\d.]+\)$/, "0)"));
-  c.fillStyle = g;
-  c.beginPath();
-  c.arc(p.x, p.y, r, 0, Math.PI * 2);
-  c.fill();
-}
-
-function drawStrokesFrame(ts) {
-  if (!strokes.length) return;
-  ctx.save();
-  ctx.globalCompositeOperation = "multiply";
-  let alive = false;
-  for (const s of strokes) {
-    /* a stroke still being written never fades; the clock starts at liftoff */
-    const age = s.born == null ? 0 : (ts - s.born) / 1000;
-    const fade = age < 2.8 ? 1 : 1 - (age - 2.8) / 1.6;
-    if (fade <= 0) continue;
-    alive = true;
-    const first = s.pts[0];
-    const last = s.pts[s.pts.length - 1];
-    if (s.pts.length > 1) {
-      /* soft halo of water around the ribbon */
-      ctx.globalAlpha = 0.13 * fade;
-      ribbonPath(ctx, s.pts, 2.0);
-      ctx.fillStyle = s.color;
-      ctx.fill();
-      /* the ribbon itself */
-      ctx.globalAlpha = 0.5 * fade;
-      ribbonPath(ctx, s.pts, 1.0);
-      ctx.fillStyle = s.color;
-      ctx.fill();
-      /* the wet center, where the pigment is still standing */
-      ctx.globalAlpha = 0.3 * fade;
-      ribbonPath(ctx, s.pts, 0.42);
-      ctx.fillStyle = s.colorDeep;
-      ctx.fill();
-    }
-    /* the brush lands and lifts: pigment pools at both ends */
-    ctx.globalAlpha = 0.34 * fade;
-    pool(ctx, first, first.w * 0.95, s.colorDeep);
-    if (last !== first) pool(ctx, last, last.w * 0.8, s.colorDeep);
-  }
-  ctx.restore();
-  if (!alive) strokes = [];
-}
-
-let activeStroke = null;
-let prevPt = null;
-let prevT = 0;
-
-function canvasPoint(e) {
-  const r = canvas.getBoundingClientRect();
-  return { x: ((e.clientX - r.left) / r.width) * W, y: ((e.clientY - r.top) / r.height) * H };
-}
-
-/* the pigment is sampled where the brush lands, then carried the whole
-   stroke, saturated and deepened the way wet paint sits on dry */
-function loadBrush(p) {
-  const c = colorL.getContext("2d");
-  const sx = Math.max(0, Math.min(W - 4, p.x - 2)) | 0;
-  const sy = Math.max(0, Math.min(H - 4, p.y - 2)) | 0;
-  const d = c.getImageData(sx, sy, 4, 4).data;
-  let r = 0,
-    g = 0,
-    b = 0;
-  for (let i = 0; i < d.length; i += 4) {
-    r += d[i];
-    g += d[i + 1];
-    b += d[i + 2];
-  }
-  const n = d.length / 4;
-  r /= n;
-  g /= n;
-  b /= n;
-  const avg = (r + g + b) / 3;
-  const clamp = (v) => Math.max(0, Math.min(255, v)) | 0;
-  const wr = clamp((avg + (r - avg) * 1.6) * 0.76);
-  const wg = clamp((avg + (g - avg) * 1.6) * 0.76);
-  const wb = clamp((avg + (b - avg) * 1.6) * 0.76);
-  return {
-    color: `rgba(${wr},${wg},${wb},0.8)`,
-    colorDeep: `rgba(${clamp(wr * 0.6)},${clamp(wg * 0.6)},${clamp(wb * 0.6)},0.7)`,
-  };
-}
-
-/* nib angle: a broad-edge pen held at ~40 degrees, so horizontal sweeps
-   run thin and diagonal pulls run broad, like real calligraphy */
-const NIB = -0.7;
-const W_MAX = 42;
-const W_MIN = 6;
-
-function strokeWidth(p, d, dt) {
-  const v = d / Math.max(1, dt); // px per ms: slow = pigment pools wide
-  const speed = Math.max(0, Math.min(1, 1 - v / 2.4));
-  const ang = Math.atan2(p.y - prevPt.y, p.x - prevPt.x);
-  const nib = 0.5 + 0.5 * Math.abs(Math.sin(ang - NIB));
-  const raw = W_MAX * (0.3 + 0.7 * speed) * nib;
-  const prevW = activeStroke.pts[activeStroke.pts.length - 1].w;
-  return Math.max(W_MIN, prevW * 0.55 + raw * 0.45); // eased, so the ribbon breathes
-}
-
-canvas.addEventListener("pointerdown", (e) => {
-  if (!finished) return;
-  canvas.setPointerCapture(e.pointerId);
-  const p = canvasPoint(e);
-  activeStroke = { pts: [{ x: p.x, y: p.y, w: 16 }], born: null, ...loadBrush(p) };
-  strokes.push(activeStroke);
-  prevPt = p;
-  prevT = performance.now();
-  startAmbient();
-});
-canvas.addEventListener("pointermove", (e) => {
-  if (!activeStroke || !finished) return;
-  const p = canvasPoint(e);
-  const d = Math.hypot(p.x - prevPt.x, p.y - prevPt.y);
-  if (d < 7) return;
-  const now = performance.now();
-  const w = strokeWidth(p, d, now - prevT);
-  if (activeStroke.pts.length < 400) activeStroke.pts.push({ x: p.x, y: p.y, w });
-  prevPt = p;
-  prevT = now;
-});
-const endStroke = () => {
-  if (activeStroke) activeStroke.born = performance.now();
-  activeStroke = null;
-  prevPt = null;
-};
-canvas.addEventListener("pointerup", endStroke);
-canvas.addEventListener("pointercancel", endStroke);
 
 /* ---------- the favicon paints along ---------- */
 
@@ -1015,7 +837,6 @@ function resetRun() {
   cCF.clearRect(0, 0, W, H);
   cCB.clearRect(0, 0, W, H);
   stopAmbient();
-  clearStrokes();
   finished = false;
   document.body.classList.remove("finished");
 }

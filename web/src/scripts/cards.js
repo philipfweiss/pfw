@@ -39,10 +39,15 @@ if (refs.length && Object.keys(cards).length) {
     if (!c) return false;
     pop.innerHTML = `
       ${closeButton}
-      <span class="margin-card-kind">${c.kind}</span>
-      <span class="margin-card-title">${c.title}</span>
-      <span class="margin-card-blurb">${c.blurb}</span>
-      ${c.href ? `<a class="margin-card-more" href="${c.href}">${c.link} &rarr;</a>` : ""}`;
+      ${c.img ? `<img class="margin-card-img${c.imgKind === "logo" ? " is-logo" : ""}" src="${c.img}" alt="" loading="lazy" decoding="async" />` : ""}
+      <div class="margin-card-body">
+        <span class="margin-card-kind">${c.kind}</span>
+        <span class="margin-card-title">${c.title}</span>
+        <span class="margin-card-blurb">${c.blurb}</span>
+        ${c.href ? `<a class="margin-card-more" href="${c.href}">${c.link} &rarr;</a>` : ""}
+      </div>`;
+    const img = pop.querySelector(".margin-card-img");
+    if (img) img.addEventListener("error", () => img.remove());
     pop.querySelector(".margin-card-close")?.addEventListener("click", (e) => {
       e.preventDefault();
       hide();
