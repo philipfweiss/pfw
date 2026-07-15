@@ -37,6 +37,10 @@ if (refs.length && Object.keys(cards).length) {
   function fill(slug) {
     const c = cards[slug];
     if (!c) return false;
+    /* the foot: one leading link, then any further reading in a quiet line */
+    const also = c.more
+      ? `<span class="margin-card-also">${c.more.map((m) => `<a href="${m.href}">${m.label}</a>`).join(" &middot; ")}</span>`
+      : "";
     pop.innerHTML = `
       ${closeButton}
       ${c.img ? `<img class="margin-card-img${c.imgKind === "logo" ? " is-logo" : ""}" src="${c.img}" alt="" loading="lazy" decoding="async" />` : ""}
@@ -44,7 +48,7 @@ if (refs.length && Object.keys(cards).length) {
         <span class="margin-card-kind">${c.kind}</span>
         <span class="margin-card-title">${c.title}</span>
         <span class="margin-card-blurb">${c.blurb}</span>
-        ${c.href ? `<a class="margin-card-more" href="${c.href}">${c.link} &rarr;</a>` : ""}
+        ${c.href ? `<a class="margin-card-more" href="${c.href}">${c.link} &rarr;</a>${also}` : ""}
       </div>`;
     const img = pop.querySelector(".margin-card-img");
     if (img) img.addEventListener("error", () => img.remove());

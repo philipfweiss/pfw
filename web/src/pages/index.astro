@@ -35,7 +35,7 @@ const cards = {
     kind: "Employer",
     title: "Airbnb",
     blurb:
-      "Where I spent six years. Most people remember the treehouses; I remember twelve thousand metrics finally agreeing with each other.",
+      "Where I spent six years. Most people remember the treehouses; I remember thirty thousand metrics finally agreeing with each other.",
     href: "https://medium.com/airbnb-engineering",
     link: "the Airbnb tech blog",
     img: "/cards/airbnb.svg",
@@ -46,8 +46,19 @@ const cards = {
     title: "Minerva",
     blurb:
       "Airbnb's metrics platform: thousands of metrics defined once and computed consistently everywhere they appear. The project that taught me what a semantic layer has to be.",
-    href: "https://www.youtube.com/watch?v=JHQqi5fdo-s",
-    link: "watch the talk",
+    href: "https://medium.com/airbnb-engineering/how-airbnb-achieved-metric-consistency-at-scale-f23cc53dea70",
+    link: "the Minerva story, part one",
+    more: [
+      {
+        label: "part two",
+        href: "https://medium.com/airbnb-engineering/airbnb-metric-computation-with-minerva-part-2-9afe6695b486",
+      },
+      {
+        label: "part three",
+        href: "https://medium.com/airbnb-engineering/how-airbnb-enables-consistent-data-consumption-at-scale-1c0b6a8b9206",
+      },
+      { label: "my talk", href: "https://www.youtube.com/watch?v=JHQqi5fdo-s" },
+    ],
     img: "/cards/minerva.jpg",
     imgKind: "logo",
   },
@@ -153,6 +164,7 @@ const personLd = {
           >, a BS and an MS, both focused on artificial intelligence, with a
           heavy side of systems and databases.
         </p>
+        <p class="invite">If you're building a semantic layer, I'd like to hear about it!</p>
       </div>
 
       <ul class="links">

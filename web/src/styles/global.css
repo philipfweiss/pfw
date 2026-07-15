@@ -230,6 +230,11 @@ body.finished h1 .wash::after {
 .bio a:hover {
   text-decoration-color: currentColor;
 }
+/* the one standing invitation: an aside in the margin's voice */
+.bio .invite {
+  font-style: italic;
+  margin-top: 1.3em;
+}
 
 /* ---- Margin references: marked words in the bio that carry a card.
    A faint standing underline says "lookup-able"; hover deepens it. ---- */
@@ -322,6 +327,24 @@ body.finished h1 .wash::after {
   text-decoration: none;
 }
 .margin-card-more:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* further reading: a quieter line under the leading link */
+.margin-card-also {
+  display: block;
+  margin-top: 0.2rem;
+  font-family: var(--font-serif);
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--faded);
+}
+.margin-card-also a {
+  color: inherit;
+  text-decoration: none;
+}
+.margin-card-also a:hover {
+  color: var(--rubric);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
