@@ -211,36 +211,6 @@ h1 {
   letter-spacing: -0.015em;
   margin: 0 0 1.2rem;
 }
-/* a watercolor swipe settles under the name once the portrait finishes */
-h1 .wash {
-  position: relative;
-  white-space: nowrap;
-}
-h1 .wash::after {
-  content: "";
-  position: absolute;
-  left: -2%;
-  right: -2%;
-  bottom: 0.02em;
-  height: 0.26em;
-  background: linear-gradient(
-    90deg,
-    rgba(62, 158, 151, 0) 0%,
-    rgba(62, 158, 151, 0.26) 12%,
-    rgba(62, 158, 151, 0.32) 55%,
-    rgba(217, 154, 78, 0.28) 90%,
-    rgba(217, 154, 78, 0) 100%
-  );
-  border-radius: 40% 55% 50% 45%;
-  z-index: -1;
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s;
-}
-body.finished h1 .wash::after {
-  transform: scaleX(1);
-}
-
 /* the bio, set in the reader's hand: the book serif, a shade denser
    than the reader so it reads like a well-set academic page */
 .bio {
@@ -468,8 +438,3 @@ body.finished h1 .wash::after {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  h1 .wash::after {
-    transition: none;
-  }
-}
