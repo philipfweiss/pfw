@@ -114,6 +114,8 @@ canvas#painting {
   right: 0;
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 1.4rem;
   margin-top: 2.2rem;
   opacity: 0;
   visibility: hidden;
@@ -181,6 +183,19 @@ button.repaint:focus-visible {
 button.repaint:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+/* the quiet companion to the plate: the painting engine's playground */
+.playground-link {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.92rem;
+  color: var(--faded);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.playground-link:hover {
+  color: var(--rubric);
 }
 
 /* ---------- right: the words ---------- */
