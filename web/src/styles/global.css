@@ -108,57 +108,12 @@ canvas#painting {
   touch-action: pan-y;
 }
 
-/* the timeline: a hairline under the sheet; drag the pigment dot to move
-   the brush back and forth through the painting's acts */
-.timeline {
-  position: relative;
-  width: min(100%, 30rem);
-  height: 20px;
-  margin-top: 1.5rem;
-  cursor: pointer;
-  touch-action: none;
-}
-.timeline::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 1px;
-  background: color-mix(in srgb, var(--ink) 20%, transparent);
-}
-.timeline-fill {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  height: 1px;
-  width: 0%;
-  background: var(--rubric);
-}
-.timeline-dot {
-  position: absolute;
-  top: 50%;
-  left: 0%;
-  width: 9px;
-  height: 9px;
-  border-radius: 50% 46% 52% 48%;
-  background: var(--rubric);
-  transform: translate(-50%, -50%);
-}
-.timeline:hover .timeline-dot {
-  transform: translate(-50%, -50%) scale(1.35);
-}
-.timeline:focus-visible {
-  outline: 2px solid var(--rubric);
-  outline-offset: 4px;
-}
-
 /* the repaint plate: the engraved-inscription button of the worldfall hero,
    set as tracked small-caps inside a double hairline frame */
 .actions {
   display: flex;
   justify-content: center;
-  margin-top: 1.4rem;
+  margin-top: 2.2rem;
 }
 button.repaint {
   position: relative;
@@ -338,39 +293,6 @@ body.finished h1 .wash::after {
 }
 .links a:hover .value {
   text-decoration-color: color-mix(in srgb, var(--rubric) 45%, transparent);
-}
-
-/* ---------- inner pages (/now): the same hand, one narrow column ---------- */
-
-.page {
-  max-width: 38rem;
-  margin: 0 auto;
-  padding: clamp(3rem, 9vh, 6rem) clamp(1.5rem, 5vw, 3.5rem) 4rem;
-}
-.crumb {
-  display: inline-block;
-  font-size: 0.68rem;
-  font-weight: 620;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--rubric);
-  text-decoration: none;
-  margin-bottom: 2.4rem;
-}
-.crumb:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.page h1 {
-  font-size: clamp(2.2rem, 4vw, 3rem);
-  margin-bottom: 0.5rem;
-}
-.dateline {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 0.95rem;
-  color: var(--faded);
-  margin: 0 0 2.2rem;
 }
 
 /* ---------- small screens: words first, portrait beneath ---------- */

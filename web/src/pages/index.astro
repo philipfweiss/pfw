@@ -6,19 +6,6 @@ import Base from "../layouts/Base.astro";
   <main class="wrap">
     <div class="easel" aria-label="Watercolor self-portrait, painting itself in stages">
       <canvas id="painting" width="1000" height="1000"></canvas>
-      <div
-        class="timeline"
-        id="timeline"
-        role="slider"
-        tabindex="0"
-        aria-label="Scrub through the painting"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        aria-valuenow="0"
-      >
-        <span class="timeline-fill" id="timelineFill"></span>
-        <span class="timeline-dot" id="timelineDot"></span>
-      </div>
       <div class="actions">
         <button class="repaint" id="repaint" disabled>paint it again</button>
       </div>
@@ -54,12 +41,6 @@ import Base from "../layouts/Base.astro";
           <a href="mailto:philipfweiss@gmail.com">
             <span class="label">Email</span>
             <span class="value">philipfweiss@gmail.com</span>
-          </a>
-        </li>
-        <li>
-          <a href="/now">
-            <span class="label">Now</span>
-            <span class="value">what I'm up to lately</span>
           </a>
         </li>
       </ul>

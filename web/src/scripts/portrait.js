@@ -28,9 +28,6 @@ const W = canvas.width,
   H = canvas.height;
 
 const repaintBtn = document.getElementById("repaint");
-const timelineEl = document.getElementById("timeline");
-const timelineFill = document.getElementById("timelineFill");
-const timelineDot = document.getElementById("timelineDot");
 
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -605,7 +602,6 @@ let start = null,
   finished = false;
 let doneS = [],
   doneW = [];
-let tNow = 0; // seconds into the current painting
 
 function progress(t, a, b) {
   return Math.min(1, Math.max(0, (t - a) / (b - a)));
@@ -661,40 +657,14 @@ function dryFrame(t) {
 function frame(ts) {
   if (!start) start = ts;
   const t = (ts - start) / 1000;
-  tNow = t;
 
   advanceTo(t);
   const pd = dryFrame(t);
   compose(pd);
-  updateTimeline(t);
   updateFavicon(ts, false);
 
   if (t < TOTAL + 0.2) rafId = requestAnimationFrame(frame);
   else finish();
-}
-
-/* rebuild the canvas at an arbitrary moment (the scrub path) */
-function renderAt(t) {
-  cS.clearRect(0, 0, W, H);
-  cCF.clearRect(0, 0, W, H);
-  cCB.clearRect(0, 0, W, H);
-  doneS = sketchGroups.map(() => 0);
-  doneW = washGroups.map(() => 0);
-  advanceTo(t);
-  const [d0, d1] = washGroups.dry;
-  const pd = progress(t, d0, d1);
-  if (pd > 0) {
-    /* approximate the cumulative frame-by-frame drying in one pass */
-    for (const c of [cCF, cCB]) {
-      c.save();
-      c.globalAlpha = Math.min(1, pd * 1.4);
-      c.fillStyle = "#fff";
-      c.fillRect(0, 0, W, H);
-      c.restore();
-    }
-  }
-  compose(pd);
-  updateTimeline(t);
 }
 
 function compose(dry) {
@@ -748,89 +718,6 @@ function applyDaylight() {
   ctx.fillStyle = TOD_TINT.color;
   ctx.fillRect(0, 0, W, H);
   ctx.restore();
-}
-
-/* =====================================================================
-   THE TIMELINE — a hairline under the sheet; drag it to move the brush
-   backwards and forwards through the painting's acts
-   ===================================================================== */
-
-function updateTimeline(t) {
-  if (!timelineEl || !TOTAL) return;
-  const pct = Math.min(100, (t / TOTAL) * 100);
-  timelineFill.style.width = pct + "%";
-  timelineDot.style.left = pct + "%";
-  timelineEl.setAttribute("aria-valuenow", String(Math.round(pct)));
-}
-
-function scrubTo(t) {
-  t = Math.max(0, Math.min(TOTAL, t));
-  tNow = t;
-  stopAmbient();
-  clearTouches();
-  if (finished) {
-    finished = false;
-    document.body.classList.remove("finished");
-  }
-  if (rafId) {
-    cancelAnimationFrame(rafId);
-    rafId = null;
-  }
-  renderAt(t);
-}
-
-function resumeFrom(t) {
-  if (t >= TOTAL - 0.05) {
-    finish();
-    return;
-  }
-  repaintBtn.disabled = true;
-  start = performance.now() - t * 1000;
-  rafId = requestAnimationFrame(frame);
-}
-
-if (timelineEl) {
-  let dragging = false;
-  let pendingT = null;
-  let scrubRaf = null;
-  const tFromEvent = (e) => {
-    const r = timelineEl.getBoundingClientRect();
-    return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * TOTAL;
-  };
-  /* coalesce drag events: one full replay per animation frame at most */
-  const scheduleScrub = (t) => {
-    pendingT = t;
-    if (scrubRaf == null)
-      scrubRaf = requestAnimationFrame(() => {
-        scrubRaf = null;
-        scrubTo(pendingT);
-      });
-  };
-  timelineEl.addEventListener("pointerdown", (e) => {
-    if (!TOTAL) return;
-    dragging = true;
-    timelineEl.setPointerCapture(e.pointerId);
-    scheduleScrub(tFromEvent(e));
-  });
-  timelineEl.addEventListener("pointermove", (e) => {
-    if (dragging) scheduleScrub(tFromEvent(e));
-  });
-  const endDrag = (e) => {
-    if (!dragging) return;
-    dragging = false;
-    const t = tFromEvent(e);
-    scrubTo(t);
-    resumeFrom(t);
-  };
-  timelineEl.addEventListener("pointerup", endDrag);
-  timelineEl.addEventListener("pointercancel", endDrag);
-  timelineEl.addEventListener("keydown", (e) => {
-    if (!TOTAL || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
-    e.preventDefault();
-    const t = Math.max(0, Math.min(TOTAL, tNow + (e.key === "ArrowRight" ? 2 : -2)));
-    scrubTo(t);
-    resumeFrom(t);
-  });
 }
 
 /* =====================================================================
@@ -1103,7 +990,6 @@ function paint() {
   doneS = sketchGroups.map(() => 0);
   doneW = washGroups.map(() => 0);
   repaintBtn.disabled = true;
-  updateTimeline(0);
   start = null;
   if (rafId) cancelAnimationFrame(rafId);
   rafId = requestAnimationFrame(frame);
@@ -1112,7 +998,6 @@ function paint() {
 function finish() {
   if (finished) return;
   finished = true;
-  tNow = TOTAL;
   if (rafId) {
     cancelAnimationFrame(rafId);
     rafId = null;
@@ -1124,7 +1009,6 @@ function finish() {
   compose(1);
   repaintBtn.disabled = false;
   document.body.classList.add("finished");
-  updateTimeline(TOTAL);
   updateFavicon(performance.now(), true);
   setupAmbient();
 }
