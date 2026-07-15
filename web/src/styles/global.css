@@ -165,8 +165,8 @@ button.repaint:disabled {
   align-self: center;
   justify-self: center;
   width: 100%;
-  max-width: 38rem;
-  padding: clamp(2rem, 6vh, 4.5rem) clamp(1.5rem, 5vw, 3.5rem);
+  max-width: 42rem;
+  padding: clamp(1.5rem, 4vh, 3rem) clamp(1.25rem, 3.5vw, 2.5rem);
 }
 
 /* a title-page eyebrow: tracked small caps in the rubric red */
@@ -182,10 +182,10 @@ button.repaint:disabled {
 h1 {
   font-family: var(--font-serif);
   font-weight: 480;
-  font-size: clamp(2.6rem, 5.2vw, 3.8rem);
+  font-size: clamp(2.2rem, 3.8vw, 2.9rem);
   line-height: 1.04;
   letter-spacing: -0.015em;
-  margin: 0 0 1.4rem;
+  margin: 0 0 1.2rem;
 }
 /* a watercolor swipe settles under the name once the portrait finishes */
 h1 .wash {
@@ -217,29 +217,21 @@ body.finished h1 .wash::after {
   transform: scaleX(1);
 }
 
-/* the bio, set in the reader's hand: the book serif at reading size */
+/* the bio, set in the reader's hand: the book serif, a shade denser
+   than the reader so it reads like a well-set academic page */
 .bio {
   font-family: var(--font-serif);
-  font-size: 1.24rem;
+  font-size: 1.13rem;
   font-weight: 440;
-  line-height: 1.55;
+  line-height: 1.58;
   font-optical-sizing: auto;
   font-variant-numeric: oldstyle-nums;
   font-kerning: normal;
   color: var(--ink);
 }
 .bio p {
-  margin: 0 0 1.05em;
+  margin: 0 0 0.95em;
   text-wrap: pretty;
-}
-/* a rubricated initial where the page begins, as in the book */
-.bio p.opener::first-letter {
-  font-weight: 470;
-  font-size: 3.1em;
-  line-height: 0.83;
-  float: left;
-  padding: 0.04em 0.12em 0 0;
-  color: var(--rubric);
 }
 .bio a {
   text-decoration: underline;
@@ -254,7 +246,7 @@ body.finished h1 .wash::after {
 /* the links, ruled like entries in a table of contents */
 .links {
   list-style: none;
-  margin: 2.4rem 0 0;
+  margin: 1.8rem 0 0;
   padding: 0;
   border-top: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
@@ -266,7 +258,7 @@ body.finished h1 .wash::after {
   display: flex;
   align-items: baseline;
   gap: 1.2rem;
-  padding: 0.72rem 0.4rem;
+  padding: 0.58rem 0.4rem;
   text-decoration: none;
   transition: background-color 0.2s;
 }
