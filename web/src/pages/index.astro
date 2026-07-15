@@ -15,7 +15,7 @@ const cards = {
     kind: "Employer",
     title: "Netflix",
     blurb:
-      "Streaming, and a famously large amount of data about what the world watches. The Data Platform is the org that keeps that data fast, correct, and usable.",
+      "By some measures, fifteen percent of the internet is people watching Netflix. I work on the offline half: the infrastructure that makes sense of it all afterward.",
     href: "https://netflixtechblog.com",
     link: "netflixtechblog.com",
     img: "/cards/netflix.svg",
@@ -48,8 +48,8 @@ const cards = {
       "Airbnb's metrics platform: thousands of metrics defined once and computed consistently everywhere they appear. The project that taught me what a semantic layer has to be.",
     href: "https://medium.com/airbnb-engineering/how-airbnb-achieved-metric-consistency-at-scale-f23cc53dea70",
     link: "the Airbnb tech blog",
-    img: "/cards/minerva.jpg",
-    imgKind: "cover",
+    img: "/cards/minerva.svg",
+    imgKind: "logo",
   },
   datajunction: {
     kind: "Project",
@@ -72,9 +72,40 @@ const cards = {
     imgKind: "cover",
   },
 };
+// Hidden-surface SEO: none of this appears on the page. The description is
+// what a search result shows under the name; the JSON-LD tells the crawlers
+// who this is in schema.org terms.
+const description =
+  "Philip Weiss is a Senior Software Engineer at Netflix. A decade of semantic layers and metrics platforms: Minerva at Airbnb, DataJunction at Netflix, plus Spark infrastructure and data developer tooling.";
+
+const personLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Philip Weiss",
+  url: "https://philipweiss.net",
+  image: "https://philipweiss.net/portrait.jpg",
+  jobTitle: "Senior Software Engineer",
+  worksFor: { "@type": "Organization", name: "Netflix" },
+  alumniOf: { "@type": "CollegeOrUniversity", name: "Stanford University" },
+  knowsAbout: [
+    "Semantic layers",
+    "Metrics platforms",
+    "Apache Spark",
+    "Analytics infrastructure",
+    "Databases",
+    "Distributed systems",
+    "Data developer tooling",
+  ],
+  sameAs: [
+    "https://github.com/philipfweiss",
+    "https://www.linkedin.com/in/weissguy/",
+    "https://www.youtube.com/watch?v=JHQqi5fdo-s",
+  ],
+};
 ---
 
-<Base>
+<Base description={description}>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(personLd)} />
   <main class="wrap">
     <div class="easel" aria-label="Watercolor self-portrait, painting itself in stages">
       <canvas id="painting" width="1000" height="1000"></canvas>
@@ -141,6 +172,14 @@ const cards = {
           <a href="mailto:philipfweiss@gmail.com">
             <span class="label">Email</span>
             <span class="value">philipfweiss@gmail.com</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://www.youtube.com/watch?v=JHQqi5fdo-s">
+            <span class="label">Talk</span>
+            <span class="value"
+              >10 Problems Airbnb Solved by Building a Metrics Platform</span
+            >
           </a>
         </li>
       </ul>
