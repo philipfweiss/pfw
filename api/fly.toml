@@ -1,7 +1,7 @@
 # Fly.io config for the personal-site API.
-# One-time setup (not yet run): fly apps create pfw-api
+# ("pfw-api" was taken on Fly, hence the longer name.)
 # Deploy: cd api && fly deploy
-app = "pfw-api"
+app = "philipweiss-api"
 primary_region = "sjc"
 
 [build]
