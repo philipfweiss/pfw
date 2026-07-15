@@ -1,0 +1,13 @@
+# web
+node_modules/
+dist/
+.astro/
+
+# api
+__pycache__/
+*.pyc
+.venv/
+
+# local
+.DS_Store
+.secrets.env

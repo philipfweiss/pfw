@@ -1,0 +1,20 @@
+# Fly.io config for the personal-site API.
+# One-time setup (not yet run): fly apps create pfw-api
+# Deploy: cd api && fly deploy
+app = "pfw-api"
+primary_region = "sjc"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # a personal site's API can sleep when idle; it wakes on the first request
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

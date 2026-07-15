@@ -1,0 +1,410 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Design tokens, borrowed from the worldfall reader: a printed
+   page — near-white paper, true ink, one rubrication red used
+   sparingly, the way a fine press would.
+   ============================================================ */
+
+:root {
+  --paper: #fcfbf8;
+  --paper-deep: #f6f4ef;
+  --sheet: #fbf6ea; /* the warmer cotton sheet the portrait is painted on */
+  --ink: #1d1b18;
+  --faded: #5b564e;
+  --rule: #e4e1d9;
+  --rule-soft: #edebe4;
+  --rubric: #99392c;
+  --highlight: color-mix(in srgb, var(--rubric) 7%, transparent);
+  /* pigments sampled from the portrait, for the small painterly accents */
+  --pool: #3e9e97;
+  --ochre: #d99a4e;
+  --sienna: #a75b34;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-faded: var(--faded);
+  --color-rule: var(--rule);
+  --color-rubric: var(--rubric);
+  --font-serif: "EB Garamond Variable", "Iowan Old Style", "Palatino", Georgia, serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    background: var(--paper);
+    color: var(--ink);
+    color-scheme: light;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    hanging-punctuation: first last;
+  }
+  body {
+    margin: 0;
+    min-height: 100svh;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--rubric) 18%, transparent);
+  }
+  a {
+    color: inherit;
+  }
+}
+
+/* ============================================================
+   The page: portrait (easel) on the left, words on the right.
+   ============================================================ */
+
+.wrap {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: clamp(2rem, 6vw, 6rem);
+  align-items: center;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(2rem, 6vh, 4.5rem) clamp(1.25rem, 5vw, 3rem);
+}
+
+/* ---------- left: the easel ---------- */
+
+.easel {
+  position: relative;
+  margin: 0;
+}
+
+/* the cotton sheet the portrait is painted on: warm, deckle-edged, taped down */
+.sheet {
+  position: relative;
+  background: var(--sheet);
+  padding: 4.2%;
+  box-shadow:
+    0 1px 2px rgba(29, 27, 24, 0.1),
+    0 12px 40px -12px rgba(29, 27, 24, 0.3);
+  transform: rotate(-1.1deg);
+  border-radius: 6px;
+  clip-path: polygon(
+    0.6% 1.2%, 12% 0.2%, 27% 1%, 44% 0.3%, 61% 1.1%, 78% 0.2%, 93% 1%, 99.4% 0.6%,
+    99.2% 14%, 99.8% 31%, 99.1% 49%, 99.7% 66%, 99% 83%, 99.6% 98.8%,
+    86% 99.4%, 70% 98.9%, 53% 99.6%, 36% 99%, 19% 99.7%, 1% 99.2%,
+    0.4% 84%, 1% 67%, 0.2% 50%, 0.9% 33%, 0.3% 16%
+  );
+}
+
+.tape {
+  position: absolute;
+  width: 92px;
+  height: 30px;
+  background: rgba(222, 205, 168, 0.55);
+  box-shadow: 0 1px 3px rgba(29, 27, 24, 0.15);
+  backdrop-filter: blur(1px);
+  z-index: 3;
+}
+.tape.tl {
+  top: -12px;
+  left: 8%;
+  transform: rotate(-6deg);
+}
+.tape.br {
+  bottom: -12px;
+  right: 7%;
+  transform: rotate(5deg);
+}
+
+canvas#painting {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 2px;
+}
+
+/* the artist's process, captioned like a plate in a book: centered, italic */
+.process {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-top: 1.5rem;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  color: var(--faded);
+  min-height: 1.6em;
+}
+.process .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50% 46% 52% 48%;
+  background: var(--faded);
+  transition: background 0.6s ease;
+  flex: none;
+}
+.process em {
+  font-style: inherit;
+}
+
+/* the repaint plate: the engraved-inscription button of the worldfall hero,
+   set as tracked small-caps inside a double hairline frame */
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.3rem;
+}
+button.repaint {
+  position: relative;
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  text-transform: lowercase;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.18em;
+  text-indent: 0.18em; /* offset the trailing track so the caps read centered */
+  color: var(--ink);
+  padding: 0.72em 1.45em;
+  white-space: nowrap;
+  border: 1px solid color-mix(in srgb, var(--ink) 48%, transparent);
+  background: color-mix(in srgb, var(--paper) 38%, transparent);
+  cursor: pointer;
+  transition:
+    letter-spacing 220ms ease,
+    text-indent 220ms ease,
+    opacity 300ms ease;
+}
+/* the fine inner rule of a bookplate, so it reads printed rather than drawn */
+button.repaint::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid color-mix(in srgb, var(--ink) 24%, transparent);
+  pointer-events: none;
+}
+button.repaint:hover:not(:disabled) {
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+}
+button.repaint:active:not(:disabled) {
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+}
+button.repaint:focus-visible {
+  outline: 2px solid var(--rubric);
+  outline-offset: 3px;
+}
+button.repaint:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* the quiet line under the plate ("brush is moving…" → "≈ 74 seconds of brushwork") */
+.hint {
+  margin-top: 0.85rem;
+  text-align: center;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.82rem;
+  color: var(--faded);
+  min-height: 1.4em;
+}
+
+/* pigments literally sampled from the finished portrait, filled in by JS */
+.palette {
+  display: flex;
+  justify-content: center;
+  gap: 0.55rem;
+  margin-top: 1.6rem;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.9s ease 0.3s,
+    transform 0.9s ease 0.3s;
+}
+body.finished .palette {
+  opacity: 1;
+  transform: none;
+}
+.palette span {
+  width: 26px;
+  height: 26px;
+  border-radius: 43% 57% 52% 48% / 55% 44% 56% 45%;
+  box-shadow:
+    inset 0 0 0 1px rgba(29, 27, 24, 0.12),
+    0 2px 5px rgba(29, 27, 24, 0.15);
+}
+.palette-label {
+  margin-top: 0.55rem;
+  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 560;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--faded);
+  opacity: 0;
+  transition: opacity 0.9s ease 0.5s;
+}
+body.finished .palette-label {
+  opacity: 1;
+}
+
+/* ---------- right: the words ---------- */
+
+.intro {
+  max-width: 30rem;
+}
+
+/* a title-page eyebrow: tracked small caps in the rubric red */
+.eyebrow {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--rubric);
+  margin: 0 0 1.1rem;
+}
+
+h1 {
+  font-family: var(--font-serif);
+  font-weight: 480;
+  font-size: clamp(2.6rem, 5.2vw, 3.8rem);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  margin: 0 0 1.4rem;
+}
+/* a watercolor swipe settles under the name once the portrait finishes */
+h1 .wash {
+  position: relative;
+  white-space: nowrap;
+}
+h1 .wash::after {
+  content: "";
+  position: absolute;
+  left: -2%;
+  right: -2%;
+  bottom: 0.02em;
+  height: 0.26em;
+  background: linear-gradient(
+    90deg,
+    rgba(62, 158, 151, 0) 0%,
+    rgba(62, 158, 151, 0.26) 12%,
+    rgba(62, 158, 151, 0.32) 55%,
+    rgba(217, 154, 78, 0.28) 90%,
+    rgba(217, 154, 78, 0) 100%
+  );
+  border-radius: 40% 55% 50% 45%;
+  z-index: -1;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s;
+}
+body.finished h1 .wash::after {
+  transform: scaleX(1);
+}
+
+/* the bio, set in the reader's hand: the book serif at reading size */
+.bio {
+  font-family: var(--font-serif);
+  font-size: 1.24rem;
+  font-weight: 440;
+  line-height: 1.55;
+  font-optical-sizing: auto;
+  font-variant-numeric: oldstyle-nums;
+  font-kerning: normal;
+  color: var(--ink);
+}
+.bio p {
+  margin: 0 0 1.05em;
+  text-wrap: pretty;
+}
+/* a rubricated initial where the page begins, as in the book */
+.bio p.opener::first-letter {
+  font-weight: 470;
+  font-size: 3.1em;
+  line-height: 0.83;
+  float: left;
+  padding: 0.04em 0.12em 0 0;
+  color: var(--rubric);
+}
+.bio a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--rule);
+  transition: text-decoration-color 0.2s;
+}
+.bio a:hover {
+  text-decoration-color: currentColor;
+}
+
+/* the links, ruled like entries in a table of contents */
+.links {
+  list-style: none;
+  margin: 2.4rem 0 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.links li + li {
+  border-top: 1px solid var(--rule-soft);
+}
+.links a {
+  display: flex;
+  align-items: baseline;
+  gap: 1.2rem;
+  padding: 0.72rem 0.4rem;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+.links a:hover {
+  background: var(--highlight);
+}
+.links .label {
+  flex: none;
+  width: 5.4rem;
+  font-size: 0.62rem;
+  font-weight: 620;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--rubric);
+}
+.links .value {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.2s;
+}
+.links a:hover .value {
+  text-decoration-color: color-mix(in srgb, var(--rubric) 45%, transparent);
+}
+
+/* ---------- small screens: words first, portrait beneath ---------- */
+
+@media (max-width: 860px) {
+  .wrap {
+    grid-template-columns: 1fr;
+    gap: 2.6rem;
+    padding-top: 2.4rem;
+  }
+  .easel {
+    order: 2;
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .intro {
+    order: 1;
+  }
+  .bio {
+    font-size: 1.14rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  h1 .wash::after,
+  .palette,
+  .palette-label {
+    transition: none;
+  }
+}
