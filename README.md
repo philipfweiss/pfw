@@ -23,9 +23,10 @@ cd api && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt \
 `web/public/portrait.jpg` is the painting; `web/public/portrait-mask.png` is its
 figure/background segmentation (u2net_human_seg), precomputed. Everything else —
 the graphite sketch, the region segmentation, the brush planning — happens in the
-browser (`web/src/scripts/portrait.js`). To swap the photo, replace both files
-(1000×1000; the mask is white-on-black figure silhouette) and adjust the region
-classifier's color rules if the scene changes.
+browser (`web/src/scripts/portrait.js`). To swap the photo, run
+`python3 tools/new_portrait.py path/to/new-painting.jpg` (crops, resizes, and
+regenerates the mask; see its docstring), then adjust the region classifier's
+color rules in `classify()` if the scene changes.
 
 The painting is alive in small ways, all in `portrait.js`:
 

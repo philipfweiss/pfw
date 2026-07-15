@@ -154,3 +154,15 @@ if (refs.length && Object.keys(cards).length) {
     if (e.key === "Escape" && !pop.hidden) hide();
   });
 }
+
+/* ---------- the email link becomes real the moment a person reaches for it
+   (the address never appears in the static HTML) ---------- */
+{
+  const el = document.getElementById("email-link");
+  const arm = () => {
+    if (el instanceof HTMLAnchorElement) el.href = `mailto:${el.dataset.u}@${el.dataset.d}`;
+  };
+  el?.addEventListener("pointerenter", arm);
+  el?.addEventListener("focus", arm);
+  el?.addEventListener("click", arm);
+}

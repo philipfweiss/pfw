@@ -412,6 +412,18 @@ h1 {
   text-decoration-color: color-mix(in srgb, var(--rubric) 45%, transparent);
 }
 
+/* ---------- ultrawide: cap the composition and frame it like a print
+   in a mat, instead of letting the two halves drift to the horizons ---------- */
+
+@media (min-width: 1700px) {
+  .wrap {
+    max-width: 1600px;
+    margin: 0 auto;
+    border-left: 1px solid var(--rule-soft);
+    border-right: 1px solid var(--rule-soft);
+  }
+}
+
 /* ---------- small screens: words first, portrait beneath ---------- */
 
 @media (max-width: 860px) {

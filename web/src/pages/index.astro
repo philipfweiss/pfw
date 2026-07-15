@@ -47,7 +47,7 @@ const cards = {
     blurb:
       "Airbnb's metrics platform and single source of truth: over 30,000 metrics and 4,000 dimensions, defined once and served consistently to every dashboard and decision.",
     href: "https://medium.com/airbnb-engineering/how-airbnb-achieved-metric-consistency-at-scale-f23cc53dea70",
-    link: "the blog post, part one",
+    link: "Minerva blog post",
     more: [
       {
         label: "part two",
@@ -198,15 +198,7 @@ const personLd = {
 
   <script type="application/json" id="margin-cards" set:html={JSON.stringify(cards)} />
   <script src="../scripts/portrait.js"></script>
-  <script src="../scripts/cards.js"></script>
-  <script>
-    /* the email link becomes real the moment a person reaches for it */
-    const el = document.getElementById("email-link");
-    const arm = () => {
-      if (el instanceof HTMLAnchorElement) el.href = `mailto:${el.dataset.u}@${el.dataset.d}`;
-    };
-    el?.addEventListener("pointerenter", arm);
-    el?.addEventListener("focus", arm);
-    el?.addEventListener("click", arm);
-  </script>
+  {/* served from public/ unprocessed: Astro would inline a small bundled
+      script into the HTML, which the CSP (script-src 'self') forbids */}
+  <script is:inline defer src="/scripts/cards.js"></script>
 </Base>
