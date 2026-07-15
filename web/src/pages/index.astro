@@ -14,14 +14,6 @@ const cards = {
     href: "https://netflixtechblog.com",
     link: "netflixtechblog.com",
   },
-  "semantic-layers": {
-    kind: "Idea",
-    title: "Semantic layer",
-    blurb:
-      "A shared vocabulary between a company's data and the people asking questions of it: metrics defined once, correctly, instead of re-derived in every dashboard.",
-    href: "https://en.wikipedia.org/wiki/Semantic_layer",
-    link: "wikipedia.org",
-  },
   spark: {
     kind: "Technology",
     title: "Apache Spark",
@@ -29,14 +21,6 @@ const cards = {
       "The open-source engine most large companies use to compute over very large datasets. I work on the infrastructure that runs it at Netflix scale.",
     href: "https://spark.apache.org",
     link: "spark.apache.org",
-  },
-  tooling: {
-    kind: "Craft",
-    title: "Data developer tooling",
-    blurb:
-      "IDEs, CLIs, CI, and paved paths for the people whose code is data pipelines. The job is making that daily loop fast and pleasant.",
-    href: null,
-    link: null,
   },
   airbnb: {
     kind: "Employer",
@@ -90,14 +74,11 @@ const cards = {
             class="ref"
             data-card="netflix"
             href={cards.netflix.href}>Netflix</a
-          >'s Data Platform, where I work on <a
-            class="ref"
-            data-card="semantic-layers"
-            href={cards["semantic-layers"].href}>semantic layers</a
-          >, <a class="ref" data-card="spark" href={cards.spark.href}>Spark</a>
-          infrastructure, and <span class="ref" data-card="tooling" tabindex="0"
-            >the tooling data developers use every day</span
-          >.
+          >'s Data Platform, where I work on semantic layers, <a
+            class="ref ref-quiet"
+            data-card="spark"
+            href={cards.spark.href}>Spark</a
+          > infrastructure, and the tooling data developers use every day.
         </p>
         <p>
           Semantic layers are the thread that runs through my career: I spent

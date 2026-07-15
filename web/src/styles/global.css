@@ -257,6 +257,11 @@ body.finished h1 .wash::after {
   border-bottom-color: color-mix(in srgb, var(--rubric) 60%, transparent);
   outline: none;
 }
+/* a quiet ref: no standing mark, only the cursor (and the card) give it
+   away, the worldfall default */
+.bio .ref-quiet {
+  border-bottom-color: transparent;
+}
 
 /* the floating card itself: a slip of the site's paper */
 .margin-card {
